@@ -205,7 +205,7 @@ export function MapScreenWeb() {
         <div className="map-missing-card">
           <div className="map-missing-icon">!</div>
           <p className="map-missing-title">Mapbox token missing</p>
-          <p className="map-missing-body">Copy <code>.env.example</code> to <code>.env</code> and set <code>NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN</code>.</p>
+          <p className="map-missing-body">Copy <code>.env.local.example</code> to <code>.env.local</code> and set <code>NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN</code>.</p>
         </div>
       </div>
     );

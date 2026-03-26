@@ -10,7 +10,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         display: ['Georgia', 'serif'],
-        ui: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        ui: ['var(--font-nunito)', 'system-ui', 'sans-serif'],
       },
       colors: {
         background: '#F5F0EA',

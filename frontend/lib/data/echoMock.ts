@@ -1,6 +1,14 @@
 import type { EchoOrbKey } from '@/lib/data/echoOrbAssets';
+import { formatEchoFullDate } from '@/lib/formatEchoDate';
 
 export type EchoFilterKey = 'city' | 'country' | 'date' | 'recency';
+
+export type EchoGlowPalette = {
+  core: string;
+  mid: string;
+  soft: string;
+  wash: string;
+};
 
 export type EchoCity = {
   id: string;
@@ -8,13 +16,14 @@ export type EchoCity = {
   country: string;
   orbKey: EchoOrbKey;
   recencyLabel: string;
-  visitDate: string;
+  visitedAt: string;
   collectionProgress: number;
   collectedCount: number;
   totalCount: number;
   image: string;
   accent: string;
   aura: [string, string];
+  glowPalette: EchoGlowPalette;
   note: string;
 };
 
@@ -46,203 +55,240 @@ export type EchoGalleryItem = {
   source: 'mine' | 'others';
 };
 
+function createGlowPalette(core: string, mid: string, soft: string, wash: string): EchoGlowPalette {
+  return { core, mid, soft, wash };
+}
+
+const cityGlowPalettes = {
+  'toronto-on': createGlowPalette('#C89258', '#E0B988', '#F6E2C9', '#E9C9A5'),
+  'mississauga-on': createGlowPalette('#A895C5', '#C7B7DC', '#EEE7F8', '#D9CCE9'),
+  'milton-on': createGlowPalette('#87B8A4', '#A9D2C0', '#E5F4EE', '#BFE0D2'),
+  'hamilton-on': createGlowPalette('#CB8B94', '#DEABB3', '#F7E3E7', '#E7C0C7'),
+  'etobicoke-on': createGlowPalette('#82AACC', '#A6C6E0', '#E4EFF8', '#C7DAEC'),
+  'london-on': createGlowPalette('#7EA6C0', '#A6C4D8', '#E2EFF5', '#C2D9E7'),
+  'montreal-on': createGlowPalette('#CC8050', '#E2A274', '#F8E1D0', '#EBC09E'),
+  'nyc-ny': createGlowPalette('#9F94BA', '#C0B6D7', '#EEEAF6', '#D6CFE6'),
+  'orlando-fl': createGlowPalette('#86C1B1', '#A9D8C8', '#E7F6F0', '#CDE8DB'),
+  'seattle-wa': createGlowPalette('#83ABC2', '#A7C7DA', '#E1EEF5', '#C1D8E5'),
+  'barcelona-ca': createGlowPalette('#D27B45', '#E5A26D', '#F9E0D0', '#EDBE96'),
+  'london-uk': createGlowPalette('#B59167', '#D1B18A', '#F3E5D6', '#E3CEAF'),
+  'kingston-cu': createGlowPalette('#CC7A52', '#E09A71', '#F8E1D1', '#EABB9E'),
+} as const satisfies Record<string, EchoGlowPalette>;
+
 const citySeeds: EchoCity[] = [
+  // ── Main Echoes wheel (12) ────────────────────────────────────────────────
   {
-    id: 'barcelona',
-    name: 'Barcelona',
-    country: 'Spain',
-    orbKey: 'coral',
-    recencyLabel: 'Now',
-    visitDate: 'Mar 20',
-    collectionProgress: 0.86,
-    collectedCount: 18,
-    totalCount: 21,
-    image:
-      'https://images.unsplash.com/photo-1511527661048-7fe73d85e9a4?auto=format&fit=crop&w=1200&q=80',
-    accent: '#D99973',
-    aura: ['#F8DDCE', '#E7B995'],
-    note: 'Warm stone, long boulevards, and a skyline that feels edited by sunlight.',
-  },
-  {
-    id: 'milton',
-    name: 'Milton',
-    country: 'Canada',
-    orbKey: 'mint',
-    recencyLabel: '2 h ago',
-    visitDate: 'Mar 19',
-    collectionProgress: 0.64,
-    collectedCount: 12,
-    totalCount: 19,
-    image:
-      'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1200&q=80',
-    accent: '#98C4B4',
-    aura: ['#E3F2EC', '#BADBCE'],
-    note: 'Clean lines, distant towers, and a calm suburban horizon held in soft glass.',
-  },
-  {
-    id: 'london-ontario',
-    name: 'London, Ontario',
-    country: 'Canada',
-    orbKey: 'sky',
-    recencyLabel: '5 h ago',
-    visitDate: 'Mar 18',
-    collectionProgress: 0.73,
-    collectedCount: 14,
-    totalCount: 19,
-    image:
-      'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=1200&q=80',
-    accent: '#96B8D6',
-    aura: ['#E2EEF8', '#BCD4E8'],
-    note: 'River light, mirrored towers, and a colder blue that still reads intimate.',
-  },
-  {
-    id: 'mississauga',
-    name: 'Mississauga',
-    country: 'Canada',
-    orbKey: 'lilac',
-    recencyLabel: 'Yesterday',
-    visitDate: 'Mar 17',
-    collectionProgress: 0.61,
-    collectedCount: 11,
-    totalCount: 18,
-    image:
-      'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1200&q=80',
-    accent: '#B3A6C8',
-    aura: ['#EFE8F6', '#D3C6E3'],
-    note: 'Glass curves, dusk reflections, and a skyline that feels polished without trying.',
-  },
-  {
-    id: 'toronto',
-    name: 'Toronto',
+    id: 'toronto-on',
+    name: 'Toronto, ON',
     country: 'Canada',
     orbKey: 'gold',
-    recencyLabel: '2 days ago',
-    visitDate: 'Mar 16',
+    recencyLabel: 'Now',
+    visitedAt: '2026-03-20',
     collectionProgress: 0.89,
     collectedCount: 19,
     totalCount: 22,
-    image:
-      'https://images.unsplash.com/photo-1517935706615-2717063c2225?auto=format&fit=crop&w=1200&q=80',
-    accent: '#D7B187',
-    aura: ['#F8E7D7', '#E9C7A5'],
+    image: '/echo-orbs/toronto-on.png',
+    accent: '#D4AF84',
+    aura: ['#F8E8D8', '#E9C9A5'],
+    glowPalette: cityGlowPalettes['toronto-on'],
     note: 'Tall light, lake haze, and a skyline that still lands with cinematic certainty.',
   },
   {
-    id: 'hamilton',
-    name: 'Hamilton',
+    id: 'mississauga-on',
+    name: 'Mississauga, ON',
+    country: 'Canada',
+    orbKey: 'lilac',
+    recencyLabel: '2 h ago',
+    visitedAt: '2026-03-19',
+    collectionProgress: 0.61,
+    collectedCount: 11,
+    totalCount: 18,
+    image: '/echo-orbs/mississauga-on.png',
+    accent: '#B3A6C8',
+    aura: ['#EFE8F6', '#D3C6E3'],
+    glowPalette: cityGlowPalettes['mississauga-on'],
+    note: 'Glass curves, dusk reflections, and a skyline that feels polished without trying.',
+  },
+  {
+    id: 'milton-on',
+    name: 'Milton, ON',
+    country: 'Canada',
+    orbKey: 'mint',
+    recencyLabel: '5 h ago',
+    visitedAt: '2026-03-18',
+    collectionProgress: 0.64,
+    collectedCount: 12,
+    totalCount: 19,
+    image: '/echo-orbs/milton-on.png',
+    accent: '#98C4B4',
+    aura: ['#E3F2EC', '#BADBCE'],
+    glowPalette: cityGlowPalettes['milton-on'],
+    note: 'Clean lines, distant towers, and a calm suburban horizon held in soft glass.',
+  },
+  {
+    id: 'hamilton-on',
+    name: 'Hamilton, ON',
     country: 'Canada',
     orbKey: 'rose',
-    recencyLabel: '3 days ago',
-    visitDate: 'Mar 15',
+    recencyLabel: 'Yesterday',
+    visitedAt: '2026-03-17',
     collectionProgress: 0.58,
     collectedCount: 10,
     totalCount: 17,
-    image:
-      'https://images.unsplash.com/photo-1479839672679-a46483c0e7c8?auto=format&fit=crop&w=1200&q=80',
+    image: '/echo-orbs/hamilton-on.png',
     accent: '#D8A0A7',
     aura: ['#F7E0E4', '#E6BCC4'],
+    glowPalette: cityGlowPalettes['hamilton-on'],
     note: 'Steel edges, escarpment air, and a horizon with more texture than gloss.',
   },
   {
-    id: 'kingston-ja',
-    name: 'Kingston, JA',
-    country: 'Jamaica',
+    id: 'etobicoke-on',
+    name: 'Etobicoke, ON',
+    country: 'Canada',
+    orbKey: 'sky',
+    recencyLabel: '2 days ago',
+    visitedAt: '2026-03-16',
+    collectionProgress: 0.72,
+    collectedCount: 13,
+    totalCount: 18,
+    image: '/echo-orbs/etobicoke-on.png',
+    accent: '#96B8D6',
+    aura: ['#E2EEF8', '#BCD4E8'],
+    glowPalette: cityGlowPalettes['etobicoke-on'],
+    note: 'Lakeshore quiet, towers behind the trees, and a light that arrives before the city does.',
+  },
+  {
+    id: 'london-on',
+    name: 'London, ON',
+    country: 'Canada',
+    orbKey: 'sky',
+    recencyLabel: '3 days ago',
+    visitedAt: '2026-03-15',
+    collectionProgress: 0.73,
+    collectedCount: 14,
+    totalCount: 19,
+    image: '/echo-orbs/london-on.png',
+    accent: '#8FB5CC',
+    aura: ['#DEEEF5', '#B8D2E2'],
+    glowPalette: cityGlowPalettes['london-on'],
+    note: 'River light, mirrored towers, and a colder blue that still reads intimate.',
+  },
+  {
+    id: 'montreal-on',
+    name: 'Montreal, ON',
+    country: 'Canada',
     orbKey: 'coral',
     recencyLabel: '4 days ago',
-    visitDate: 'Mar 14',
-    collectionProgress: 0.67,
-    collectedCount: 12,
-    totalCount: 18,
-    image:
-      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
-    accent: '#D59073',
-    aura: ['#F8DCCF', '#E8B49C'],
-    note: 'Heat shimmer, coastal brightness, and a skyline softened by tropical air.',
+    visitedAt: '2026-03-14',
+    collectionProgress: 0.77,
+    collectedCount: 15,
+    totalCount: 20,
+    image: '/echo-orbs/montreal-on.png',
+    accent: '#D4956E',
+    aura: ['#F8DCC8', '#E8B89A'],
+    glowPalette: cityGlowPalettes['montreal-on'],
+    note: 'Old stone, neon French, and a skyline that manages to feel both dense and open.',
   },
   {
-    id: 'orlando',
-    name: 'Orlando',
-    country: 'United States',
-    orbKey: 'mint',
-    recencyLabel: '5 days ago',
-    visitDate: 'Mar 13',
-    collectionProgress: 0.55,
-    collectedCount: 10,
-    totalCount: 18,
-    image:
-      'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=1200&q=80',
-    accent: '#9FCDBF',
-    aura: ['#E4F3EE', '#C1E0D4'],
-    note: 'Lake reflections, evening towers, and a skyline tuned for clean warm light.',
-  },
-  {
-    id: 'new-york',
-    name: 'New York',
+    id: 'nyc-ny',
+    name: 'NYC, NY',
     country: 'United States',
     orbKey: 'lilac',
-    recencyLabel: '1 week ago',
-    visitDate: 'Mar 11',
+    recencyLabel: '5 days ago',
+    visitedAt: '2026-03-13',
     collectionProgress: 0.76,
     collectedCount: 15,
     totalCount: 20,
-    image:
-      'https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?auto=format&fit=crop&w=1200&q=80',
+    image: '/echo-orbs/nyc-ny.png',
     accent: '#B6B1C7',
     aura: ['#ECEAF4', '#CEC9DD'],
+    glowPalette: cityGlowPalettes['nyc-ny'],
     note: 'Steel, steam, and a skyline that looks engineered for memory.',
   },
   {
-    id: 'vancouver',
-    name: 'Vancouver',
-    country: 'Canada',
+    id: 'orlando-fl',
+    name: 'Orlando, FL',
+    country: 'United States',
+    orbKey: 'mint',
+    recencyLabel: '1 week ago',
+    visitedAt: '2026-03-11',
+    collectionProgress: 0.55,
+    collectedCount: 10,
+    totalCount: 18,
+    image: '/echo-orbs/orlando-fl.png',
+    accent: '#9FCDBF',
+    aura: ['#E4F3EE', '#C1E0D4'],
+    glowPalette: cityGlowPalettes['orlando-fl'],
+    note: 'Lake reflections, evening towers, and a skyline tuned for clean warm light.',
+  },
+  {
+    id: 'seattle-wa',
+    name: 'Seattle, WA',
+    country: 'United States',
     orbKey: 'sky',
     recencyLabel: '9 days ago',
-    visitDate: 'Mar 08',
+    visitedAt: '2026-03-08',
     collectionProgress: 0.62,
     collectedCount: 11,
     totalCount: 18,
-    image:
-      'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=1200&q=80',
-    accent: '#9BBED5',
-    aura: ['#E1EEF6', '#B9D4E5'],
-    note: 'Glass, mountains, and harbor light compressed into one clean horizon.',
+    image: '/echo-orbs/seattle-wa.png',
+    accent: '#93B8CC',
+    aura: ['#DEEAF4', '#B8D0E0'],
+    glowPalette: cityGlowPalettes['seattle-wa'],
+    note: 'Pacific grey, needle silhouettes, and a skyline that earns every cloud it wears.',
   },
   {
-    id: 'chicago',
-    name: 'Chicago',
-    country: 'United States',
-    orbKey: 'gold',
+    id: 'barcelona-ca',
+    name: 'Barcelona, CA',
+    country: 'Spain',
+    orbKey: 'coral',
     recencyLabel: '11 days ago',
-    visitDate: 'Mar 07',
-    collectionProgress: 0.71,
-    collectedCount: 13,
-    totalCount: 18,
-    image:
-      'https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=1200&q=80',
-    accent: '#D4AF84',
-    aura: ['#F8E7D9', '#E7C8AA'],
-    note: 'Lakefront light and tall clean geometry held against a colder sky.',
+    visitedAt: '2026-03-07',
+    collectionProgress: 0.86,
+    collectedCount: 18,
+    totalCount: 21,
+    image: '/echo-orbs/barcelona-ca.png',
+    accent: '#D99060',
+    aura: ['#F8DACC', '#E8B488'],
+    glowPalette: cityGlowPalettes['barcelona-ca'],
+    note: 'Warm stone, long boulevards, and a skyline that feels edited by sunlight.',
   },
   {
-    id: 'dubai',
-    name: 'Dubai',
-    country: 'United Arab Emirates',
-    orbKey: 'rose',
+    id: 'london-uk',
+    name: 'London, UK',
+    country: 'United Kingdom',
+    orbKey: 'gold',
     recencyLabel: '2 weeks ago',
-    visitDate: 'Mar 03',
+    visitedAt: '2026-03-03',
     collectionProgress: 0.81,
     collectedCount: 16,
     totalCount: 20,
-    image:
-      'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80',
-    accent: '#D9A0A5',
-    aura: ['#F9E3E5', '#ECC2C7'],
-    note: 'Tall gold light, mirrored facades, and a skyline sharpened into luxury.',
+    image: '/echo-orbs/london-uk.png',
+    accent: '#C4A47E',
+    aura: ['#F4E4D4', '#DFCAA4'],
+    glowPalette: cityGlowPalettes['london-uk'],
+    note: 'Grey sky, steel bridges, and a skyline that carries centuries without shouting about it.',
+  },
+  // ── All Cities only (1) ───────────────────────────────────────────────────
+  {
+    id: 'kingston-cu',
+    name: 'Kingston, CU',
+    country: 'Caribbean',
+    orbKey: 'coral',
+    recencyLabel: '3 weeks ago',
+    visitedAt: '2026-02-28',
+    collectionProgress: 0.67,
+    collectedCount: 12,
+    totalCount: 18,
+    image: '/echo-orbs/kingston-cu.png',
+    accent: '#D5906C',
+    aura: ['#F8DACC', '#E8B490'],
+    glowPalette: cityGlowPalettes['kingston-cu'],
+    note: 'Heat shimmer, coastal brightness, and a skyline softened by tropical air.',
   },
 ];
 
-export const allCitiesOrbImage =
-  'https://images.unsplash.com/photo-1465447142348-e9952c393450?auto=format&fit=crop&w=1200&q=80';
+export const allCitiesOrbImage = '/echo-orbs/all-earth.png';
 
 const mineTemplates = [
   {
@@ -367,7 +413,7 @@ const mineEchoes: EchoCollectionItem[] = allEchoCities.flatMap((city, cityIndex)
     tint: city.accent,
     aura: city.aura,
     collected: index < visibleCount,
-    dateLabel: `${city.visitDate} / saved ${Math.max(1, cityIndex + index)}d apart`,
+    dateLabel: `${formatEchoFullDate(city.visitedAt)} / saved ${Math.max(1, cityIndex + index)}d apart`,
   }));
 });
 
@@ -382,7 +428,7 @@ const othersEchoes: EchoCollectionItem[] = allEchoCities.flatMap((city, cityInde
     tint: city.accent,
     aura: city.aura,
     collected: true,
-    dateLabel: `${city.visitDate} / ${template.activityLabel}`,
+    dateLabel: `${formatEchoFullDate(city.visitedAt)} / ${template.activityLabel}`,
     popularityCount: template.popularityBase - cityIndex * 8 - index * 11,
     activityLabel: template.activityLabel,
   })),
@@ -445,7 +491,7 @@ export function filterEchoCities(cities: EchoCity[], query: string, filterKey: E
     }
 
     if (filterKey === 'date') {
-      return city.visitDate.toLowerCase().includes(normalized);
+      return formatEchoFullDate(city.visitedAt).toLowerCase().includes(normalized);
     }
 
     return city.recencyLabel.toLowerCase().includes(normalized) || city.note.toLowerCase().includes(normalized);

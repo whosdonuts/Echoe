@@ -24,11 +24,31 @@ body {
 }
 
 body {
-  background: var(--background);
+  background: linear-gradient(135deg, var(--background-warm), var(--background));
+  min-height: 100dvh;
   color: var(--echo-ink);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-nunito), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* App shell — centred 480px mobile container */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  background-color: var(--background);
+  overflow: hidden;
+}
+
+/* Scrollable screen area above the tab bar */
+.app-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
 }
 
 /* Scrollbar hiding utility */
