@@ -1,7 +1,7 @@
 'use client';
 
-import { CSSProperties, ReactNode, ComponentProps } from 'react';
-import { LucideIcon, Map, Radio, Users, Compass, User, Mail, UserPlus, Trophy, ArrowLeftRight } from 'lucide-react';
+import { CSSProperties, ReactNode } from 'react';
+import { Map, Radio, Users, Compass, User, Mail, UserPlus, Trophy, ArrowLeftRight } from 'lucide-react';
 import { colors } from '@/lib/theme/colors';
 
 export type SegmentOption = {
@@ -61,18 +61,36 @@ export function SocialSegmentedControl({
   return (
     <div
       style={{
+        position: 'relative',
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
         padding: 5,
-        borderRadius: 24,
-        backgroundColor: '#FFFDF9',
-        border: '1px solid rgba(225, 214, 203, 0.88)',
-        boxShadow: '0 8px 16px rgba(84, 56, 41, 0.10)',
+        borderRadius: 999,
+        overflow: 'hidden',
+        background: `linear-gradient(180deg, ${colors.shellGlassStrong}, ${colors.shellGlass})`,
+        border: `1px solid ${colors.shellGlassBorder}`,
+        boxShadow: `0 20px 34px ${colors.shellGlassShadow}, inset 0 1px 0 ${colors.shellGlassHighlight}`,
+        backdropFilter: 'blur(28px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(28px) saturate(180%)',
         ...style,
       }}
     >
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          borderRadius: 999,
+          background: [
+            'radial-gradient(120% 130% at 50% -18%, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 56%)',
+            'radial-gradient(78% 110% at 12% 118%, rgba(141, 168, 219, 0.18) 0%, rgba(255,255,255,0) 76%)',
+            'radial-gradient(82% 112% at 88% -10%, rgba(199, 208, 240, 0.16) 0%, rgba(255,255,255,0) 72%)',
+          ].join(', '),
+          pointerEvents: 'none',
+        }}
+      />
       {options.map((option) => {
         const active = option.key === activeKey;
         return (
@@ -80,29 +98,55 @@ export function SocialSegmentedControl({
             key={option.key}
             onClick={() => onChange(option.key)}
             style={{
+              position: 'relative',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              borderRadius: 18,
+              minHeight: compact ? 34 : 38,
+              borderRadius: 999,
               paddingLeft: 14,
               paddingRight: 14,
-              paddingTop: compact ? 9 : 11,
-              paddingBottom: compact ? 9 : 11,
+              paddingTop: compact ? 8 : 10,
+              paddingBottom: compact ? 8 : 10,
               flex: fullWidth ? 1 : undefined,
-              backgroundColor: active ? colors.echoPrimaryTerracotta : 'transparent',
-              boxShadow: active ? '0 6px 12px rgba(218, 115, 82, 0.26)' : 'none',
-              border: 'none',
+              overflow: 'hidden',
+              background: active
+                ? 'linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.5))'
+                : 'transparent',
+              boxShadow: active
+                ? `0 12px 24px ${colors.shellShadow}, inset 0 1px 0 rgba(255,255,255,0.9)`
+                : 'none',
+              border: `1px solid ${active ? 'rgba(255,255,255,0.54)' : 'transparent'}`,
+              backdropFilter: active ? 'blur(24px) saturate(180%)' : undefined,
+              WebkitBackdropFilter: active ? 'blur(24px) saturate(180%)' : undefined,
               cursor: 'pointer',
-              transition: 'background-color 0.15s ease',
+              transition: 'background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease',
               whiteSpace: 'nowrap',
+              transform: active ? 'translateY(-1px)' : 'translateY(0)',
             }}
           >
+            {active ? (
+              <div
+                aria-hidden
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 999,
+                  background: [
+                    'radial-gradient(110% 120% at 50% 0%, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0) 54%)',
+                    'radial-gradient(80% 110% at 50% 118%, rgba(141, 168, 219, 0.16) 0%, rgba(255,255,255,0) 78%)',
+                  ].join(', '),
+                  pointerEvents: 'none',
+                }}
+              />
+            ) : null}
             <span
               style={{
-                color: active ? colors.echoMainWhite : colors.echoOliveBronze,
+                position: 'relative',
+                color: active ? colors.text : colors.textSoft,
                 fontSize: 12,
                 fontWeight: 700,
-                letterSpacing: 0.2,
+                letterSpacing: 0.16,
               }}
             >
               {option.label}
@@ -119,20 +163,43 @@ export function SocialIconButton({ icon, onPress, accent = false, style }: Socia
     <button
       onClick={onPress}
       style={{
+        position: 'relative',
         width: 42,
         height: 42,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 21,
-        backgroundColor: accent ? colors.echoPrimaryTerracotta : '#FFFFFF',
-        border: `1px solid ${accent ? colors.echoPrimaryTerracotta : 'rgba(226, 215, 205, 0.86)'}`,
-        boxShadow: '0 6px 12px rgba(84, 56, 41, 0.08)',
+        overflow: 'hidden',
+        background: accent
+          ? 'linear-gradient(180deg, rgba(255,255,255,0.68), rgba(255,255,255,0.48))'
+          : `linear-gradient(180deg, ${colors.shellGlassStrong}, ${colors.shellGlass})`,
+        border: `1px solid ${accent ? 'rgba(255,255,255,0.52)' : colors.shellGlassBorder}`,
+        boxShadow: accent
+          ? `0 16px 28px ${colors.shellGlassShadow}, inset 0 1px 0 rgba(255,255,255,0.84)`
+          : `0 14px 24px ${colors.shellGlassShadow}, inset 0 1px 0 rgba(255,255,255,0.84)`,
+        backdropFilter: 'blur(26px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(26px) saturate(180%)',
         cursor: 'pointer',
-        color: accent ? colors.echoMainWhite : colors.echoDarkCocoa,
+        color: accent ? colors.shellAccentText : colors.text,
         ...style,
       }}
     >
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          borderRadius: 21,
+          background: accent
+            ? [
+                'radial-gradient(118% 120% at 50% 0%, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0) 56%)',
+                'radial-gradient(78% 108% at 50% 118%, rgba(141, 168, 219, 0.14) 0%, rgba(255,255,255,0) 76%)',
+              ].join(', ')
+            : 'radial-gradient(118% 120% at 50% 0%, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0) 56%)',
+          pointerEvents: 'none',
+        }}
+      />
       {getIcon(icon)}
     </button>
   );
@@ -148,8 +215,13 @@ export function SocialLogoBadge({ icon, accent = true }: SocialLogoBadgeProps) {
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 24,
-        border: `1px solid ${accent ? 'rgba(227, 172, 150, 0.36)' : 'rgba(225, 214, 203, 0.86)'}`,
-        backgroundColor: accent ? '#FBE8DE' : '#F8F2EB',
+        border: `1px solid ${accent ? 'rgba(255,255,255,0.52)' : colors.shellGlassBorder}`,
+        background: accent
+          ? 'linear-gradient(180deg, rgba(255,255,255,0.68), rgba(255,255,255,0.48))'
+          : `linear-gradient(180deg, ${colors.shellGlassStrong}, ${colors.shellGlass})`,
+        boxShadow: `0 16px 24px ${colors.shellGlassShadow}, inset 0 1px 0 rgba(255,255,255,0.84)`,
+        backdropFilter: 'blur(26px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(26px) saturate(180%)',
         flexShrink: 0,
       }}
     >
@@ -161,8 +233,9 @@ export function SocialLogoBadge({ icon, accent = true }: SocialLogoBadgeProps) {
           alignItems: 'center',
           justifyContent: 'center',
           borderRadius: 19,
-          backgroundColor: 'rgba(255, 255, 255, 0.66)',
-          color: accent ? colors.echoDeepTerracotta : colors.echoOliveBronze,
+          backgroundColor: 'rgba(255, 255, 255, 0.74)',
+          border: '1px solid rgba(255,255,255,0.52)',
+          color: accent ? colors.shellAccentText : colors.textSoft,
         }}
       >
         {getIcon(icon)}
@@ -175,10 +248,12 @@ export function SocialCard({ children, style }: SocialCardProps) {
   return (
     <div
       style={{
-        borderRadius: 28,
-        backgroundColor: '#FFFEFC',
-        border: '1px solid rgba(226, 215, 205, 0.9)',
-        boxShadow: '0 10px 20px rgba(75, 52, 39, 0.10)',
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: 30,
+        background: `linear-gradient(180deg, rgba(255,255,255,0.98), ${colors.shellSurfaceSoft})`,
+        border: `1px solid ${colors.shellBorderSoft}`,
+        boxShadow: `0 22px 36px ${colors.shellShadow}, inset 0 1px 0 rgba(255,255,255,0.88)`,
         ...style,
       }}
     >

@@ -11,11 +11,11 @@ type SocialAvatarProps = {
 };
 
 const toneMap: Record<SocialTone, [string, string, string]> = {
-  terracotta: ['#FFF7F1', '#F6D7CC', '#E8A48F'],
-  sand: ['#FFF8EF', '#F7E2B7', '#EBC378'],
-  clay: ['#FFF7F3', '#F2DBD2', '#E6B19C'],
-  cream: ['#FFFBEF', '#F7E9BE', '#E9D38C'],
-  neutral: ['#FFF8F2', '#EFE2D6', '#D6C4B3'],
+  terracotta: ['#F9FBFF', '#D9E6F8', '#8EA9CF'],
+  sand: ['#FBFCFF', '#E5EDF9', '#ADC0DE'],
+  clay: ['#FAFBFF', '#E4EAF6', '#9DAFD0'],
+  cream: ['#FFFFFF', '#EBF1FA', '#BAC8E0'],
+  neutral: ['#FFFFFF', '#EAF0F7', '#C7D2E1'],
 };
 
 function getInitials(name: string) {
@@ -52,9 +52,9 @@ export function SocialAvatar({ name, tone, size = 56, active = false, style }: S
           width: size,
           height: size,
           borderRadius: size / 2,
-          backgroundColor: 'rgba(255, 255, 255, 0.84)',
-          border: '1px solid rgba(227, 216, 205, 0.88)',
-          boxShadow: '0 8px 16px rgba(75, 52, 39, 0.12)',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.96), rgba(246,249,253,0.92))',
+          border: `1px solid ${colors.shellBorderSoft}`,
+          boxShadow: `0 16px 24px ${colors.shellShadow}, inset 0 1px 0 rgba(255,255,255,0.88)`,
         }}
       />
       {/* Gradient avatar */}
@@ -64,7 +64,7 @@ export function SocialAvatar({ name, tone, size = 56, active = false, style }: S
           height: innerSize,
           borderRadius: innerSize / 2,
           background: `linear-gradient(135deg, ${c1}, ${c2}, ${c3})`,
-          border: '1px solid rgba(255,255,255,0.72)',
+          border: '1px solid rgba(255,255,255,0.8)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -80,12 +80,12 @@ export function SocialAvatar({ name, tone, size = 56, active = false, style }: S
             left: 0,
             right: 0,
             height: '48%',
-            backgroundColor: 'rgba(255,255,255,0.16)',
+            backgroundColor: 'rgba(255,255,255,0.24)',
           }}
         />
         <span
           style={{
-            color: colors.echoDarkCocoa,
+            color: colors.text,
             fontWeight: 700,
             letterSpacing: 0.8,
             fontSize: Math.max(12, size * 0.23),
@@ -105,8 +105,9 @@ export function SocialAvatar({ name, tone, size = 56, active = false, style }: S
             width: 12,
             height: 12,
             borderRadius: 6,
-            backgroundColor: colors.sage,
+            backgroundColor: colors.shellAccent,
             border: `2px solid ${colors.echoMainWhite}`,
+            boxShadow: '0 0 0 2px rgba(255,255,255,0.55)',
           }}
         />
       ) : null}

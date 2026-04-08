@@ -23,7 +23,9 @@ export function SocialInboxSheet({ visible, items, onClose }: SocialInboxSheetPr
         display: 'flex',
         alignItems: 'flex-end',
         justifyContent: 'center',
-        backgroundColor: 'rgba(32, 24, 20, 0.20)',
+        backgroundColor: 'rgba(54, 68, 94, 0.14)',
+        backdropFilter: 'blur(18px)',
+        WebkitBackdropFilter: 'blur(18px)',
       }}
       onClick={onClose}
     >
@@ -33,12 +35,13 @@ export function SocialInboxSheet({ visible, items, onClose }: SocialInboxSheetPr
           maxWidth: 480,
           borderTopLeftRadius: 32,
           borderTopRightRadius: 32,
-          backgroundColor: colors.echoMainWhite,
+          background: `linear-gradient(180deg, rgba(255,255,255,0.98), ${colors.shellSurfaceSoft})`,
           paddingLeft: 20,
           paddingRight: 20,
           paddingTop: 10,
           paddingBottom: 28,
-          boxShadow: '0 -8px 26px rgba(86, 33, 13, 0.16)',
+          borderTop: `1px solid ${colors.shellBorderSoft}`,
+          boxShadow: `0 -24px 44px ${colors.shellShadowStrong}, inset 0 1px 0 rgba(255,255,255,0.9)`,
           maxHeight: '80vh',
           overflow: 'hidden',
           display: 'flex',
@@ -48,7 +51,7 @@ export function SocialInboxSheet({ visible, items, onClose }: SocialInboxSheetPr
       >
         {/* Handle */}
         <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 12 }}>
-          <div style={{ width: 46, height: 5, borderRadius: 999, backgroundColor: '#DDD2C6' }} />
+          <div style={{ width: 46, height: 5, borderRadius: 999, backgroundColor: 'rgba(138, 146, 157, 0.26)' }} />
         </div>
 
         {/* Header */}
@@ -65,7 +68,7 @@ export function SocialInboxSheet({ visible, items, onClose }: SocialInboxSheetPr
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span
               style={{
-                color: colors.echoOliveBronze,
+                color: colors.textMuted,
                 fontSize: 11,
                 fontWeight: 700,
                 letterSpacing: 0.7,
@@ -74,7 +77,7 @@ export function SocialInboxSheet({ visible, items, onClose }: SocialInboxSheetPr
             >
               Social Inbox
             </span>
-            <p style={{ color: colors.text, fontSize: 27, fontWeight: 700, letterSpacing: -0.5, margin: 0, fontFamily: 'Georgia, serif' }}>
+            <p style={{ color: colors.text, fontSize: 27, fontWeight: 700, letterSpacing: -0.5, margin: 0 }}>
               Recent updates
             </p>
             <p style={{ color: colors.textSoft, fontSize: 13, lineHeight: '19px', fontWeight: 500, margin: 0 }}>
@@ -90,10 +93,13 @@ export function SocialInboxSheet({ visible, items, onClose }: SocialInboxSheetPr
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: colors.echoOffWhiteBackground,
-              border: '1px solid rgba(226, 215, 205, 0.9)',
-              color: colors.echoDarkCocoa,
+              background: `linear-gradient(180deg, ${colors.shellGlassStrong}, ${colors.shellGlass})`,
+              border: `1px solid ${colors.shellGlassBorder}`,
+              color: colors.text,
               cursor: 'pointer',
+              boxShadow: `0 12px 20px ${colors.shellGlassShadow}, inset 0 1px 0 rgba(255,255,255,0.84)`,
+              backdropFilter: 'blur(24px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
             }}
           >
             <X size={20} />
@@ -119,8 +125,9 @@ export function SocialInboxSheet({ visible, items, onClose }: SocialInboxSheetPr
                 alignItems: 'center',
                 gap: 13,
                 borderRadius: 24,
-                backgroundColor: '#FFFCF8',
-                border: '1px solid rgba(226, 215, 205, 0.88)',
+                background: `linear-gradient(180deg, rgba(255,255,255,0.97), ${colors.shellSurfaceSoft})`,
+                border: `1px solid ${colors.shellBorderSoft}`,
+                boxShadow: `0 18px 28px ${colors.shellShadow}`,
                 paddingLeft: 14,
                 paddingRight: 14,
                 paddingTop: 13,

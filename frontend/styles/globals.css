@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --background: #F5F0EA;
-  --background-warm: #FCF8F2;
+  --background: #F3F6FB;
+  --background-warm: #F8FAFE;
+  --background-soft: #F6F9FD;
   --echo-ink: #201C1A;
   --echo-paper: #FFFCF8;
   --echo-primary: #DE805E;
@@ -24,11 +25,67 @@ body {
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(124% 88% at 50% -12%, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0) 52%),
+    radial-gradient(96% 76% at 10% 6%, rgba(186, 202, 232, 0.16) 0%, rgba(186, 202, 232, 0) 74%),
+    radial-gradient(88% 70% at 92% 18%, rgba(170, 184, 224, 0.12) 0%, rgba(170, 184, 224, 0) 76%),
+    linear-gradient(180deg, var(--background-warm), var(--background));
+  min-height: 100dvh;
   color: var(--echo-ink);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-nunito), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* App shell — centred 480px mobile container */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  background-color: var(--background);
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.app-shell::before,
+.app-shell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 240ms ease;
+  z-index: 0;
+}
+
+.app-shell::before {
+  background:
+    radial-gradient(124% 92% at 50% -10%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 54%),
+    radial-gradient(82% 64% at 12% 18%, rgba(188, 203, 233, 0.18) 0%, rgba(188, 203, 233, 0) 82%),
+    radial-gradient(78% 60% at 88% 100%, rgba(198, 209, 240, 0.16) 0%, rgba(198, 209, 240, 0) 78%),
+    radial-gradient(72% 54% at 78% 8%, rgba(204, 194, 240, 0.08) 0%, rgba(204, 194, 240, 0) 74%);
+}
+
+.app-shell::after {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0) 28%),
+    linear-gradient(180deg, rgba(229, 236, 246, 0.34), rgba(243, 246, 251, 0) 68%);
+}
+
+.app-shell[data-route-tone='shell']::before,
+.app-shell[data-route-tone='shell']::after {
+  opacity: 1;
+}
+
+/* Scrollable screen area above the tab bar */
+.app-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 /* Scrollbar hiding utility */
@@ -57,7 +114,11 @@ a {
   position: relative;
   width: 100%;
   height: 100%;
-  background: #f0ede8;
+  background:
+    radial-gradient(120% 90% at 50% -14%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 54%),
+    radial-gradient(84% 60% at 12% 10%, rgba(188, 203, 233, 0.2) 0%, rgba(188, 203, 233, 0) 82%),
+    radial-gradient(82% 56% at 88% 100%, rgba(199, 207, 237, 0.14) 0%, rgba(199, 207, 237, 0) 78%),
+    linear-gradient(180deg, var(--background-warm), var(--background));
   overflow: hidden;
 }
 
@@ -65,9 +126,14 @@ a {
   max-width: 360px;
   margin: 64px auto 0;
   padding: 24px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(20, 10, 50, 0.08);
+  border-radius: 28px;
+  background:
+    radial-gradient(120% 110% at 50% 0%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 54%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8));
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 20px 40px rgba(58, 74, 100, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(26px) saturate(170%);
+  -webkit-backdrop-filter: blur(26px) saturate(170%);
   text-align: center;
 }
 
@@ -76,8 +142,9 @@ a {
   height: 40px;
   margin: 0 auto 16px;
   border-radius: 999px;
-  border: 1px solid rgba(217, 119, 6, 0.5);
-  color: #d97706;
+  border: 1px solid rgba(95, 125, 165, 0.28);
+  background: rgba(95, 125, 165, 0.1);
+  color: #415b84;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -86,14 +153,14 @@ a {
 
 .map-missing-title {
   margin: 0 0 8px;
-  color: rgba(30, 20, 60, 0.72);
+  color: rgba(32, 39, 51, 0.78);
   font-size: 15px;
   font-weight: 600;
 }
 
 .map-missing-body {
   margin: 0;
-  color: rgba(30, 20, 60, 0.4);
+  color: rgba(95, 108, 125, 0.7);
   font-size: 12px;
   line-height: 1.5;
 }
@@ -207,16 +274,19 @@ a {
 }
 
 .echoes-popup .mapboxgl-popup-content {
-  background: rgba(255, 253, 250, 0.92);
-  border: 1px solid rgba(20, 10, 50, 0.08);
-  border-radius: 12px;
+  background:
+    radial-gradient(120% 110% at 50% 0%, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 54%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8));
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 18px;
   padding: 0;
-  box-shadow: 0 8px 32px rgba(20, 10, 50, 0.1), 0 1px 4px rgba(20, 10, 50, 0.06);
-  backdrop-filter: blur(16px);
+  box-shadow: 0 20px 42px rgba(58, 74, 100, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(26px) saturate(180%);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
 }
 
 .echoes-popup .mapboxgl-popup-tip {
-  border-top-color: rgba(255, 253, 250, 0.92);
+  border-top-color: rgba(255, 255, 255, 0.9);
 }
 
 .echoes-popup .mapboxgl-popup-close-button {
@@ -232,13 +302,18 @@ a {
 
 .map-dev-button,
 .demo-walk-btn {
-  border-radius: 18px;
-  border: 1px solid rgba(20, 10, 50, 0.1);
-  background: rgba(255, 255, 255, 0.8);
-  color: rgba(20, 10, 50, 0.55);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background:
+    radial-gradient(120% 110% at 50% 0%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 56%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.66));
+  color: rgba(32, 39, 51, 0.76);
   font-size: 12px;
   font-weight: 700;
   padding: 10px 16px;
+  box-shadow: 0 14px 30px rgba(58, 74, 100, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
   cursor: pointer;
 }
 

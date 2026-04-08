@@ -29,7 +29,7 @@ const friendsFeed: ExplorePost[] = [
     city: 'Toronto',
     location: 'Old Port ferry wall',
     music: 'Soft ferry cables',
-    accent: '#F3D68B',
+    accent: '#87A3C9',
   },
   {
     id: 'friend-cafe',
@@ -40,7 +40,7 @@ const friendsFeed: ExplorePost[] = [
     city: 'Toronto',
     location: 'Prince Street Cafe',
     music: 'Espresso hiss loop',
-    accent: '#E9A78E',
+    accent: '#9AAFD6',
   },
   {
     id: 'friend-station',
@@ -51,7 +51,7 @@ const friendsFeed: ExplorePost[] = [
     city: 'Toronto',
     location: 'Union platform 5',
     music: 'Rain over brakes',
-    accent: '#F0C67D',
+    accent: '#7B95BC',
   },
 ];
 
@@ -65,7 +65,7 @@ const exploreFeed: ExplorePost[] = [
     city: 'Toronto',
     location: 'Queens Quay',
     music: 'Blue hour ferry horn',
-    accent: '#DE805E',
+    accent: '#6482AD',
   },
   {
     id: 'explore-arcade',
@@ -76,7 +76,7 @@ const exploreFeed: ExplorePost[] = [
     city: 'Toronto',
     location: 'St. Lawrence Arcade',
     music: 'Market after-rain',
-    accent: '#F3D68B',
+    accent: '#8EA8CB',
   },
   {
     id: 'explore-bridge',
@@ -87,7 +87,7 @@ const exploreFeed: ExplorePost[] = [
     city: 'Toronto',
     location: 'Bathurst footbridge',
     music: 'Night wind loop',
-    accent: '#E9A78E',
+    accent: '#A1B4D9',
   },
   {
     id: 'explore-underpass',
@@ -98,7 +98,7 @@ const exploreFeed: ExplorePost[] = [
     city: 'Toronto',
     location: 'Lower Simcoe underpass',
     music: 'Wet tire reverb',
-    accent: '#DE805E',
+    accent: '#5D7AA3',
   },
 ];
 
@@ -139,7 +139,7 @@ const inboxItems = [
 
 function TabToggle({ activeFeed, onChange }: { activeFeed: ExploreFeedMode; onChange: (next: ExploreFeedMode) => void }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2, borderRadius: 999, padding: 4, backgroundColor: 'rgba(255, 255, 255, 0.16)', border: '1px solid rgba(255, 255, 255, 0.22)' }}>
+    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2, borderRadius: 999, padding: 4, background: `linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.12))`, border: '1px solid rgba(255, 255, 255, 0.3)', backdropFilter: 'blur(26px) saturate(180%)', WebkitBackdropFilter: 'blur(26px) saturate(180%)', boxShadow: '0 18px 34px rgba(17, 24, 39, 0.2), inset 0 1px 0 rgba(255,255,255,0.28)' }}>
       {(['friends', 'explore'] as const).map((item) => {
         const active = item === activeFeed;
         return (
@@ -148,11 +148,12 @@ function TabToggle({ activeFeed, onChange }: { activeFeed: ExploreFeedMode; onCh
             onClick={() => onChange(item)}
             style={{
               minWidth: 90, borderRadius: 999, paddingLeft: 16, paddingRight: 16, paddingTop: 9, paddingBottom: 9, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              backgroundColor: active ? 'rgba(255, 255, 255, 0.96)' : 'transparent',
+              background: active ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255,255,255,0.86))' : 'transparent',
               border: 'none', cursor: 'pointer',
+              boxShadow: active ? '0 10px 20px rgba(16, 18, 24, 0.16)' : 'none',
             }}
           >
-            <span style={{ color: active ? colors.echoDarkCocoa : 'rgba(255, 255, 255, 0.72)', fontSize: 14, fontWeight: 700, letterSpacing: 0.1 }}>
+            <span style={{ color: active ? colors.text : 'rgba(240, 244, 252, 0.82)', fontSize: 14, fontWeight: 700, letterSpacing: 0.1 }}>
               {item === 'friends' ? 'Friends' : 'Explore'}
             </span>
           </button>
@@ -169,21 +170,26 @@ function FeedActions({ accent, liked, onToggleLike }: { accent: string; liked: b
         onClick={onToggleLike}
         style={{
           width: 50, height: 50, borderRadius: 25, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          backgroundColor: liked ? 'rgba(222, 128, 94, 0.92)' : 'rgba(18, 13, 10, 0.24)',
-          border: `1px solid ${liked ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.12)'}`,
+          background: liked
+            ? `linear-gradient(180deg, rgba(255,255,255,0.76), rgba(255,255,255,0.56))`
+            : 'linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.12))',
+          border: `1px solid ${liked ? 'rgba(255, 255, 255, 0.24)' : 'rgba(255, 255, 255, 0.18)'}`,
+          backdropFilter: 'blur(22px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(22px) saturate(180%)',
+          boxShadow: liked ? '0 20px 32px rgba(74, 104, 142, 0.24)' : '0 18px 30px rgba(10, 12, 20, 0.2)',
           transform: liked ? 'scale(1.04)' : 'scale(1)',
           transition: 'all 0.15s ease', cursor: 'pointer',
         }}
       >
-        <Heart size={24} color={colors.echoMainWhite} fill={liked ? colors.echoMainWhite : 'none'} />
+        <Heart size={24} color={liked ? colors.shellAccentText : colors.echoMainWhite} fill={liked ? colors.shellAccentText : 'none'} />
       </button>
-      <button style={{ width: 50, height: 50, borderRadius: 25, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(18, 13, 10, 0.24)', border: '1px solid rgba(255, 255, 255, 0.12)', cursor: 'pointer' }}>
+      <button style={{ width: 50, height: 50, borderRadius: 25, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.12))', border: '1px solid rgba(255, 255, 255, 0.18)', backdropFilter: 'blur(22px) saturate(180%)', WebkitBackdropFilter: 'blur(22px) saturate(180%)', boxShadow: '0 18px 30px rgba(10, 12, 20, 0.2)', cursor: 'pointer' }}>
         <MessageCircle size={23} color={colors.echoMainWhite} />
       </button>
-      <button style={{ width: 50, height: 50, borderRadius: 25, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(18, 13, 10, 0.24)', border: '1px solid rgba(255, 255, 255, 0.12)', cursor: 'pointer' }}>
+      <button style={{ width: 50, height: 50, borderRadius: 25, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.12))', border: '1px solid rgba(255, 255, 255, 0.18)', backdropFilter: 'blur(22px) saturate(180%)', WebkitBackdropFilter: 'blur(22px) saturate(180%)', boxShadow: '0 18px 30px rgba(10, 12, 20, 0.2)', cursor: 'pointer' }}>
         <Send size={23} color={colors.echoMainWhite} />
       </button>
-      <div style={{ width: 54, height: 54, borderRadius: 27, border: `1.5px solid ${accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(18, 13, 10, 0.20)' }}>
+      <div style={{ width: 54, height: 54, borderRadius: 27, border: `1px solid rgba(255,255,255,0.22)`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.1))', backdropFilter: 'blur(22px) saturate(180%)', WebkitBackdropFilter: 'blur(22px) saturate(180%)', boxShadow: '0 18px 30px rgba(10, 12, 20, 0.2)' }}>
         <div style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Music2 size={16} color={colors.echoMainWhite} />
         </div>
@@ -214,12 +220,12 @@ function ExploreFeedCard({ post, height, liked, onToggleLike }: { post: ExploreP
 function InboxPlaceholder({ onBack }: { onBack: () => void }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: colors.echoOffWhiteBackground, height: '100%', overflowY: 'auto' }}>
-      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 14, paddingLeft: 18, paddingRight: 18, paddingTop: 16, paddingBottom: 18, borderBottom: `1px solid ${colors.tabBarBorderSoft}`, backgroundColor: colors.echoMainWhite }}>
+      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 14, paddingLeft: 18, paddingRight: 18, paddingTop: 16, paddingBottom: 18, borderBottom: `1px solid ${colors.shellBorderSoft}`, background: `linear-gradient(180deg, rgba(255,255,255,0.96), ${colors.shellSurfaceSoft})` }}>
         <button
           onClick={onBack}
-          style={{ width: 42, height: 42, borderRadius: 21, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.echoOffWhiteBackground, border: `1px solid ${colors.tabBarBorder}`, cursor: 'pointer' }}
+          style={{ width: 42, height: 42, borderRadius: 21, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(180deg, rgba(255,255,255,0.94), ${colors.shellSurfaceSoft})`, border: `1px solid ${colors.shellBorderSoft}`, boxShadow: `0 14px 24px ${colors.shellShadow}`, cursor: 'pointer' }}
         >
-          <ChevronLeft size={20} color={colors.echoInk} />
+          <ChevronLeft size={20} color={colors.text} />
         </button>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ color: colors.echoInk, fontSize: 24, fontWeight: 700 }}>Inbox</span>
@@ -230,7 +236,7 @@ function InboxPlaceholder({ onBack }: { onBack: () => void }) {
         {inboxItems.map((item) => (
           <button
             key={item.id}
-            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 14, paddingTop: 14, paddingBottom: 14, borderBottom: `1px solid ${colors.tabBarBorderSoft}`, width: '100%', background: 'none', border: 'none', borderBottomColor: colors.tabBarBorderSoft, borderBottomWidth: 1, borderBottomStyle: 'solid', cursor: 'pointer' }}
+            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 14, paddingTop: 14, paddingBottom: 14, borderBottom: `1px solid ${colors.shellBorderSoft}`, width: '100%', background: 'none', border: 'none', borderBottomColor: colors.shellBorderSoft, borderBottomWidth: 1, borderBottomStyle: 'solid', cursor: 'pointer' }}
           >
             <img src={item.avatar} alt={item.name} style={{ width: 54, height: 54, borderRadius: 27, objectFit: 'cover', flexShrink: 0 }} />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3, textAlign: 'left' }}>
@@ -238,7 +244,7 @@ function InboxPlaceholder({ onBack }: { onBack: () => void }) {
                 <span style={{ color: colors.echoInk, fontSize: 15, fontWeight: 700 }}>{item.name}</span>
                 <span style={{ color: colors.textMuted, fontSize: 12, fontWeight: 700 }}>{item.time}</span>
               </div>
-              <span style={{ color: colors.echoDarkCocoa, fontSize: 12, fontWeight: 600 }}>{item.username}</span>
+              <span style={{ color: colors.shellAccentText, fontSize: 12, fontWeight: 600 }}>{item.username}</span>
               <span style={{ color: colors.textSoft, fontSize: 13, lineHeight: '18px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{item.preview}</span>
             </div>
           </button>
@@ -291,7 +297,7 @@ export function ExploreScreen() {
         </div>
         <button
           onClick={() => setViewMode('inbox')}
-          style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255, 255, 255, 0.16)', border: '1px solid rgba(255, 255, 255, 0.22)', cursor: 'pointer', pointerEvents: 'auto' }}
+          style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.12))', border: '1px solid rgba(255, 255, 255, 0.3)', backdropFilter: 'blur(26px) saturate(180%)', WebkitBackdropFilter: 'blur(26px) saturate(180%)', boxShadow: '0 18px 34px rgba(17, 24, 39, 0.2), inset 0 1px 0 rgba(255,255,255,0.28)', cursor: 'pointer', pointerEvents: 'auto' }}
         >
           <Mail size={20} color={colors.echoMainWhite} />
         </button>

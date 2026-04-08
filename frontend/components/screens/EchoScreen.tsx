@@ -8,21 +8,23 @@ import {
   useState,
   MouseEvent as ReactMouseEvent,
   TouchEvent as ReactTouchEvent,
-  CSSProperties,
 } from 'react';
 import { ArrowLeft, Search, SlidersHorizontal, ChevronRight, Radio } from 'lucide-react';
 import {
+  EchoGlowPalette,
   EchoCity,
   EchoCollectionItem,
   EchoGalleryItem,
   allEchoCities,
   allCitiesOrbImage,
+  allOrbGlowPalette,
   getEchoCity,
   getEchoCityMineEchoes,
   getEchoCityOtherEchoes,
   getEchoGalleryItemsForCity,
   recentEchoCities,
 } from '@/lib/data/echoMock';
+import { formatEchoFullDate } from '@/lib/formatEchoDate';
 import { colors } from '@/lib/theme/colors';
 import { shellMetrics } from '@/lib/theme/layout';
 
@@ -40,10 +42,26 @@ const archiveRowLengths = [4, 5, 6, 7, 6, 5, 4] as const;
 const archiveSlotCount = 37;
 const archiveMinScale = 0.3;
 const archiveMaxScale = 1.1;
+const wheelTapSnapDurationMs = 400;
+const wheelCaptureVelocityThreshold = 1.1;
+const wheelCaptureSpring = 30;
+const wheelCaptureDamping = 11;
+const wheelSettleVelocityFloor = 0.02;
 
 const cityDistanceKm: Record<string, number> = {
-  barcelona: 6480, milton: 88, 'london-ontario': 168, mississauga: 44, toronto: 0,
-  hamilton: 69, 'kingston-ja': 2860, orlando: 1690, 'new-york': 790, vancouver: 3360, chicago: 702, dubai: 11020,
+  'toronto-on': 0,
+  'etobicoke-on': 15,
+  'mississauga-on': 27,
+  'milton-on': 55,
+  'hamilton-on': 74,
+  'london-on': 192,
+  'montreal-on': 542,
+  'nyc-ny': 877,
+  'orlando-fl': 1823,
+  'seattle-wa': 4240,
+  'kingston-cu': 3022,
+  'barcelona-ca': 6554,
+  'london-uk': 7220,
 };
 
 function clamp(value: number, min: number, max: number) { return Math.max(min, Math.min(max, value)); }
@@ -52,12 +70,30 @@ function withAlpha(hex: string, alpha: string) {
   return `${hex}${alpha}`;
 }
 function joinMeta(parts: Array<string | undefined>) { return parts.filter(Boolean).join(' / '); }
+
+function hexToRgba(hex: string, alpha: number) {
+  if (!hex.startsWith('#') || hex.length !== 7) return hex;
+  return `rgba(${parseInt(hex.slice(1, 3), 16)}, ${parseInt(hex.slice(3, 5), 16)}, ${parseInt(hex.slice(5, 7), 16)}, ${alpha})`;
+}
+
+function makeGlowFromPalette(palette: EchoGlowPalette): string[] {
+  return [
+    hexToRgba(palette.core, 0.36),
+    hexToRgba(palette.mid, 0.28),
+    hexToRgba(palette.soft, 0.18),
+    hexToRgba(palette.wash, 0.08),
+  ];
+}
+function makeGlowFromCity(city: EchoCity): string[] { return makeGlowFromPalette(city.glowPalette); }
+function formatCityVisitDate(city: Pick<EchoCity, 'visitedAt'>) {
+  return formatEchoFullDate(city.visitedAt);
+}
 function distanceKmForCity(city: EchoCity) { return cityDistanceKm[city.id] ?? 9999; }
 function searchArchiveCities(cities: EchoCity[], query: string) {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return cities;
   return cities.filter((city) =>
-    [city.name, city.country, city.note, city.visitDate, city.recencyLabel].some((v) => v.toLowerCase().includes(normalized)),
+    [city.name, city.country, city.note, formatCityVisitDate(city), city.recencyLabel].some((v) => v.toLowerCase().includes(normalized)),
   );
 }
 function sortArchiveCities(cities: EchoCity[], sortKey: ArchiveSortKey) {
@@ -95,6 +131,7 @@ function nearestRotationForIndex(index: number, currentRotation: number, stepAng
     Math.abs(candidate - currentRotation) < Math.abs(closest - currentRotation) ? candidate : closest,
   );
 }
+
 
 function ProgressRail({ progress }: { progress: number }) {
   return (
@@ -149,9 +186,9 @@ function FilterChip({ active, label, onPress }: { active: boolean; label: string
 function WheelOrb({ item, active, x, y, zIndex, scale, opacity, onPress }: {
   item: WheelItem; active: boolean; x: number; y: number; zIndex: number; scale: number; opacity: number; onPress: () => void;
 }) {
-  const orbSrc = item.type === 'all' ? allCitiesOrbImage : item.city.image;
-  const label = item.type === 'all' ? 'All' : item.city.name;
-  const overlayTop = item.type === 'all' ? colors.echoOliveBronze : colors.echoDarkCocoa;
+  const isAllOrb = item.type === 'all';
+  const orbSrc = isAllOrb ? allCitiesOrbImage : item.city.image;
+  const label = isAllOrb ? 'All' : item.city.name;
 
   return (
     <button
@@ -166,31 +203,42 @@ function WheelOrb({ item, active, x, y, zIndex, scale, opacity, onPress }: {
         transform: `scale(${scale})`,
         zIndex,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+        background: 'none', border: 'none', outline: 'none', cursor: 'pointer', padding: 0,
       }}
     >
-      <div style={{ width: orbSize, height: orbSize, borderRadius: orbSize / 2, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', display: 'flex' }}>
-        <img src={orbSrc} alt={label} style={{ width: orbSize, height: orbSize, borderRadius: 999, objectFit: 'cover', position: 'absolute', inset: 0 }} />
+      {isAllOrb ? (
         <div
           style={{
-            position: 'absolute', inset: 0, borderRadius: orbSize / 2,
-            background: `linear-gradient(to bottom, ${withAlpha(overlayTop, active ? '96' : '86')}, rgba(32, 28, 26, 0.14), rgba(255,255,255,0.02))`,
-          }}
-        />
-        <span
-          style={{
-            position: 'absolute',
-            top: item.type === 'all' ? 31 : 19,
-            left: 6, right: 6,
-            color: '#FFFDFB', fontSize: 9.5, lineHeight: '11px', fontWeight: active ? 700 : 600,
-            letterSpacing: 0, textAlign: 'center',
-            textShadow: 'rgba(18, 15, 14, 0.44) 0px 1px 6px',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            width: orbSize,
+            height: orbSize,
+            borderRadius: '50%',
+            overflow: 'hidden',
+            backgroundColor: 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          {label}
-        </span>
-      </div>
+          <img
+            src={orbSrc}
+            alt={label}
+            style={{
+              width: '106%',
+              height: '106%',
+              objectFit: 'cover',
+              display: 'block',
+              flexShrink: 0,
+              backgroundColor: 'transparent',
+            }}
+          />
+        </div>
+      ) : (
+        <img
+          src={orbSrc}
+          alt={label}
+          style={{ width: orbSize, height: orbSize, objectFit: 'contain', display: 'block' }}
+        />
+      )}
     </button>
   );
 }
@@ -200,13 +248,11 @@ function ArchiveCityOrb({ city, focused, placeholder, scale, focus, opacity, ite
   itemSize: number; x: number; y: number; zIndex: number; onPress: () => void;
 }) {
   const size = itemSize;
-  const ringInset = Math.max(2, size * 0.04);
   const labelVisible = !placeholder && focus > 0.42;
   const progressVisible = !placeholder && focus > 0.72;
   const progressBarWidth = size * 0.48;
-  const progressBottom = size * 0.18;
+  const progressBottom = size * 0.12;
   const progressTrackHeight = Math.max(3, size * 0.038);
-  const progressHeight = city ? size * (0.18 + city.collectionProgress * 0.5) : 0;
 
   return (
     <button
@@ -215,79 +261,56 @@ function ArchiveCityOrb({ city, focused, placeholder, scale, focus, opacity, ite
         position: 'absolute', left: x - size / 2, top: y - size / 2, width: size, height: size, zIndex,
         background: 'none', border: 'none', cursor: 'pointer', padding: 0,
         opacity, transform: `scale(${scale})`, transition: 'opacity 0.18s ease, transform 0.18s ease',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
     >
-      <div style={{ width: '100%', height: '100%', borderRadius: size / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', position: 'relative', display: 'flex' }}>
-        {city ? (
-          <>
-            <img src={city.image} alt={city.name} style={{ width: size, height: size, borderRadius: size / 2, objectFit: 'cover', position: 'absolute', inset: 0 }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(255,255,255,0.34), rgba(255,255,255,0))', borderRadius: size / 2 }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(24,21,20,0.52), rgba(24,21,20,0.14), rgba(24,21,20,0))', borderRadius: size / 2 }} />
+      {city ? (
+        <div style={{ width: size, height: size, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Render PNG as-is — no circular clip, no gradient overlay */}
+          <img
+            src={city.image}
+            alt={city.name}
+            style={{ width: size, height: size, objectFit: 'contain', display: 'block' }}
+          />
+          {labelVisible && (
+            <span
+              style={{
+                position: 'absolute', bottom: size * 0.22, left: 4, right: 4,
+                color: '#FFFDFB', fontSize: Math.max(8, size * 0.096), lineHeight: '1.15', fontWeight: 700,
+                textAlign: 'center',
+                opacity: 0.5 + focus * 0.5,
+                textShadow: '0px 1px 5px rgba(14,12,10,0.80), 0px 0px 12px rgba(14,12,10,0.50)',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}
+            >
+              {city.name}
+            </span>
+          )}
+          {progressVisible && (
             <div
               style={{
-                position: 'absolute', left: 0, right: 0, bottom: 0,
-                height: progressHeight,
-                borderBottomLeftRadius: size / 2, borderBottomRightRadius: size / 2,
-                background: `linear-gradient(to bottom, ${withAlpha(city.accent, '00')}, ${withAlpha(city.accent, focused ? '74' : '40')})`,
+                position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+                bottom: progressBottom, width: progressBarWidth, height: progressTrackHeight,
+                borderRadius: progressTrackHeight / 2, overflow: 'hidden',
+                backgroundColor: 'rgba(255,255,255,0.22)', border: '1px solid rgba(255,255,255,0.16)',
               }}
-            />
-            <div
-              style={{
-                position: 'absolute', top: ringInset, left: ringInset,
-                width: size - ringInset * 2, height: size - ringInset * 2,
-                borderRadius: (size - ringInset * 2) / 2,
-                border: `1.2px solid ${withAlpha(city.accent, focused ? '90' : '4B')}`,
-                opacity: 0.28 + city.collectionProgress * 0.48,
-              }}
-            />
-          </>
-        ) : (
-          <>
-            <div style={{ width: size, height: size, borderRadius: size / 2, background: 'linear-gradient(135deg, #EFEFEF, #D9D9D9)' }} />
-            <div
-              style={{
-                position: 'absolute', top: ringInset, left: ringInset,
-                width: size - ringInset * 2, height: size - ringInset * 2,
-                borderRadius: (size - ringInset * 2) / 2,
-                border: '1.2px solid rgba(123,123,123,0.32)',
-                opacity: focused ? 0.44 : 0.3,
-              }}
-            />
-          </>
-        )}
-        {labelVisible ? (
-          <span
-            style={{
-              position: 'absolute', top: size * 0.22, left: 6, right: 6,
-              color: '#FFFDFB', fontSize: 9.5, lineHeight: '11px', fontWeight: 600, textAlign: 'center',
-              opacity: 0.4 + focus * 0.48,
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}
-          >
-            {city?.name}
-          </span>
-        ) : null}
-        {progressVisible && city ? (
-          <div
-            style={{
-              position: 'absolute', alignSelf: 'center', left: '50%', transform: 'translateX(-50%)',
-              bottom: progressBottom, width: progressBarWidth, height: progressTrackHeight,
-              borderRadius: progressTrackHeight / 2, overflow: 'hidden',
-              backgroundColor: 'rgba(255,255,255,0.24)', border: '1px solid rgba(255,255,255,0.18)',
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute', left: 0, top: 0,
-                width: Math.max(progressTrackHeight, progressBarWidth * city.collectionProgress),
-                height: progressTrackHeight,
-                borderRadius: progressTrackHeight / 2,
-                background: `linear-gradient(to right, ${withAlpha(city.accent, 'E8')}, ${withAlpha(city.accent, focused ? 'FF' : 'D0')})`,
-              }}
-            />
-          </div>
-        ) : null}
-      </div>
+            >
+              <div
+                style={{
+                  position: 'absolute', left: 0, top: 0,
+                  width: Math.max(progressTrackHeight, progressBarWidth * city.collectionProgress),
+                  height: progressTrackHeight,
+                  borderRadius: progressTrackHeight / 2,
+                  background: `linear-gradient(to right, ${withAlpha(city.accent, 'E0')}, ${withAlpha(city.accent, 'FF')})`,
+                }}
+              />
+            </div>
+          )}
+        </div>
+      ) : (
+        // Empty placeholder slot — subtle grey disc
+        <div style={{ width: size * 0.72, height: size * 0.72, borderRadius: '50%', background: 'rgba(180,175,170,0.18)' }} />
+      )}
     </button>
   );
 }
@@ -309,23 +332,15 @@ function ArchiveCityCard({ city, onPress }: { city: EchoCity; onPress: () => voi
           background: `linear-gradient(to bottom right, #FFFFFF, ${withAlpha(city.aura[0], '78')}, ${withAlpha(city.aura[1], '3C')})`,
         }}
       />
-      <div
-        style={{
-          width: 76, height: 76, borderRadius: 38, flexShrink: 0, position: 'relative', zIndex: 1,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: `linear-gradient(135deg, ${withAlpha(city.aura[0], 'F5')}, ${withAlpha(city.aura[1], 'DB')})`,
-          border: '1px solid rgba(255,255,255,0.9)',
-        }}
-      >
-        <div style={{ position: 'absolute', width: 66, height: 66, borderRadius: 33, border: `1px solid ${withAlpha(city.accent, '30')}` }} />
-        <img src={city.image} alt={city.name} style={{ width: 60, height: 60, borderRadius: 30, objectFit: 'cover' }} />
+      <div style={{ width: 76, height: 76, flexShrink: 0, position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src={city.image} alt={city.name} style={{ width: 76, height: 76, objectFit: 'contain', display: 'block' }} />
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <span style={{ color: colors.echoInk, fontSize: 19, fontWeight: 700, letterSpacing: -0.4, fontFamily: 'Georgia, serif' }}>{city.name}</span>
+          <span style={{ color: colors.echoInk, fontSize: 19, fontWeight: 700, letterSpacing: -0.4 }}>{city.name}</span>
           <span style={{ color: colors.textMuted, fontSize: 11, fontWeight: 700, letterSpacing: 0.8, textTransform: 'uppercase' }}>{city.recencyLabel}</span>
         </div>
-        <span style={{ color: colors.textMuted, fontSize: 12, fontWeight: 700 }}>{joinMeta([city.country, city.visitDate])}</span>
+        <span style={{ color: colors.textMuted, fontSize: 12, fontWeight: 700 }}>{joinMeta([city.country, formatCityVisitDate(city)])}</span>
         <p style={{ color: colors.textSoft, fontSize: 13, lineHeight: '20px', fontWeight: 500, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{city.note}</p>
         <ProgressRail progress={city.collectionProgress} />
       </div>
@@ -360,7 +375,7 @@ function EchoCard({ item, mode, height, onPress }: { item: EchoCollectionItem; m
         ) : null}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, position: 'relative' }}>
-        <p style={{ color: '#FFFFFF', fontSize: 29, fontWeight: 700, letterSpacing: -0.8, margin: 0, fontFamily: 'Georgia, serif' }}>{item.title}</p>
+        <p style={{ color: '#FFFFFF', fontSize: 29, fontWeight: 700, letterSpacing: -0.8, margin: 0 }}>{item.title}</p>
         <span style={{ color: 'rgba(255,255,255,0.76)', fontSize: 12, fontWeight: 700 }}>{joinMeta([item.area, item.dateLabel])}</span>
         <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13, lineHeight: '20px', fontWeight: 500, margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {locked ? 'Uncollected Echo. The shape remains visible, but the details stay veiled.' : item.note}
@@ -408,6 +423,18 @@ export function EchoScreen() {
   const archiveFrameRef = useRef<number | null>(null);
   const archivePendingOffsetRef = useRef({ x: 0, y: 0 });
 
+  // Inertia / momentum refs — wheel
+  const wheelVelocityRef = useRef(0);
+  const wheelLastMoveYRef = useRef(0);
+  const wheelLastMoveTimeRef = useRef(0);
+  const wheelInertiaFrameRef = useRef<number | null>(null);
+  const wheelSettleFrameRef = useRef<number | null>(null);
+
+  // Inertia / momentum refs — archive pan
+  const archiveVelocityRef = useRef({ x: 0, y: 0 });
+  const archiveLastMoveRef = useRef({ x: 0, y: 0, time: 0 });
+  const archiveInertiaFrameRef = useRef<number | null>(null);
+
   const [view, setView] = useState<EchoView>('main');
   const [cityOrigin, setCityOrigin] = useState<CityOrigin>('main');
   const [selectedCityId, setSelectedCityId] = useState(recentEchoCities[0].id);
@@ -431,6 +458,11 @@ export function EchoScreen() {
     return () => ro.disconnect();
   }, []);
 
+  useEffect(() => () => {
+    if (wheelInertiaFrameRef.current != null) cancelAnimationFrame(wheelInertiaFrameRef.current);
+    if (wheelSettleFrameRef.current != null) cancelAnimationFrame(wheelSettleFrameRef.current);
+  }, []);
+
   const deferredQuery = useDeferredValue(searchQuery);
   const wheelItems = useMemo<WheelItem[]>(() => [
     ...recentEchoCities.slice(0, 6).map((city) => ({ type: 'city' as const, city })),
@@ -451,6 +483,11 @@ export function EchoScreen() {
     return closestCity;
   }, [stepAngle, wheelItems, wheelRotation]);
 
+  const todayLabel = useMemo(() => {
+    const d = new Date();
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  }, []);
+
   const mineEchoes = getEchoCityMineEchoes(selectedCity.id);
   const otherEchoes = getEchoCityOtherEchoes(selectedCity.id);
   const galleryItems = getEchoGalleryItemsForCity(selectedCity.id);
@@ -459,7 +496,7 @@ export function EchoScreen() {
   const { width, height } = screenSize;
   const bottomTabClearance = 134;
   const wheelStageHeight = Math.max(520, height - bottomTabClearance);
-  const wheelRadius = Math.min(width * 0.78, wheelStageHeight * 0.37);
+  const wheelRadius = Math.min(width * 0.58, wheelStageHeight * 0.28);
   const wheelCenterX = -width * 0.18;
   const wheelCenterY = wheelStageHeight * 0.52;
   const contentBottomPadding = shellMetrics.contentBottomPadding;
@@ -467,7 +504,8 @@ export function EchoScreen() {
   const archiveTopAreaTop = 12;
   const archiveTopChromeHeight = showFilters ? 148 : 108;
   const archiveStageTop = archiveTopAreaTop + archiveTopChromeHeight - 4;
-  const archiveStageBottom = bottomTabClearance;
+  // Nav bar is ~80 px tall; stop just 4 px above it so the field fills to the edge
+  const archiveStageBottom = 84;
   const archiveViewportHeight = Math.max(320, height - archiveStageTop - archiveStageBottom);
   const archiveCenter = useMemo(() => ({ x: width / 2, y: archiveViewportHeight / 2 }), [archiveViewportHeight, width]);
   const archiveItemSize = clamp(80 + width * 0.05, 96, 144);
@@ -526,10 +564,21 @@ export function EchoScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, archiveCities]);
 
-  function snapWheelTo(targetRotation: number) {
+  function cancelWheelSettle() {
+    if (wheelSettleFrameRef.current != null) {
+      cancelAnimationFrame(wheelSettleFrameRef.current);
+      wheelSettleFrameRef.current = null;
+    }
+  }
+
+  function animateWheelTo(targetRotation: number, duration: number) {
+    if (wheelInertiaFrameRef.current != null) {
+      cancelAnimationFrame(wheelInertiaFrameRef.current);
+      wheelInertiaFrameRef.current = null;
+    }
+    cancelWheelSettle();
     const startRot = wheelRotationRef.current;
     const delta = targetRotation - startRot;
-    const duration = 400;
     const start = performance.now();
     function tick(now: number) {
       const t = Math.min((now - start) / duration, 1);
@@ -537,9 +586,22 @@ export function EchoScreen() {
       const current = startRot + delta * eased;
       wheelRotationRef.current = current;
       setWheelRotation(current);
-      if (t < 1) requestAnimationFrame(tick);
+      if (t < 1) {
+        wheelSettleFrameRef.current = requestAnimationFrame(tick);
+      } else {
+        wheelSettleFrameRef.current = null;
+      }
     }
-    requestAnimationFrame(tick);
+    wheelSettleFrameRef.current = requestAnimationFrame(tick);
+  }
+
+  function snapWheelTo(targetRotation: number) {
+    animateWheelTo(targetRotation, wheelTapSnapDurationMs);
+  }
+
+  function getNearestSettledWheelRotation(rotation: number) {
+    const snappedRotation = snapRotationToStep(rotation, stepAngle);
+    return rotation + normalizeAngle(snappedRotation - rotation);
   }
 
   function snapArchiveToNode(node: { baseX: number; baseY: number }) {
@@ -598,6 +660,18 @@ export function EchoScreen() {
     };
   });
 
+  // Derived state for the main view info panel
+  const isCenteredAllOrb = wheelLayout.some(
+    (entry) => entry.item.type === 'all' && angularDistance(entry.angle, 0) < stepAngle * 0.5,
+  );
+  const wheelInfoPanelLeft = wheelCenterX + wheelRadius + orbSize / 2 + 16;
+  const wheelInfoPanelTop = wheelCenterY - 36;
+  const infoCardTitle = isCenteredAllOrb ? 'All' : focusedCity.name;
+  const infoCardSubtitle = isCenteredAllOrb ? 'Browse all cities' : formatCityVisitDate(focusedCity);
+  const [cardGlowCore, cardGlowMid, cardGlowSoft, cardGlowWash] = isCenteredAllOrb
+    ? makeGlowFromPalette(allOrbGlowPalette)
+    : makeGlowFromCity(focusedCity);
+
   function handleWheelItemPress(item: WheelItem, index: number, isActive: boolean) {
     if (item.type === 'all') { setView('allCities'); return; }
     if (isActive) { openCity(item.city.id, 'main'); return; }
@@ -633,24 +707,99 @@ export function EchoScreen() {
     return { x: (e as MouseEvent).clientX, y: (e as MouseEvent).clientY };
   }
 
+  function applyWheelInertia(initialVelocity: number) {
+    if (wheelInertiaFrameRef.current != null) {
+      cancelAnimationFrame(wheelInertiaFrameRef.current);
+      wheelInertiaFrameRef.current = null;
+    }
+    const settleTargetRotation = getNearestSettledWheelRotation(
+      wheelRotationRef.current + initialVelocity * 0.18,
+    );
+    let velocity = initialVelocity;
+    let lastTime = performance.now();
+
+    function tick(now: number) {
+      const dt = Math.min(now - lastTime, 64);
+      const dtSeconds = dt / 1000;
+      lastTime = now;
+
+      const currentRotation = wheelRotationRef.current;
+      const settleError = normalizeAngle(settleTargetRotation - currentRotation);
+      const speed = Math.abs(velocity);
+      const captureInfluence = Math.max(0, 1 - speed / wheelCaptureVelocityThreshold);
+      const proximityInfluence = Math.max(0, 1 - Math.abs(settleError) / (stepAngle * 0.55));
+      const captureBlend = Math.max(captureInfluence, proximityInfluence * 0.35);
+
+      // Keep the familiar free coast, then progressively guide residual motion
+      // into the nearest centered slot without a separate snap phase.
+      velocity *= Math.exp(-dt * 0.005);
+      if (captureBlend > 0) {
+        const guidedAcceleration =
+          settleError * wheelCaptureSpring * captureBlend - velocity * wheelCaptureDamping * captureBlend;
+        velocity += guidedAcceleration * dtSeconds;
+      }
+
+      const nextRotation = currentRotation + velocity * dtSeconds;
+      wheelRotationRef.current = nextRotation;
+      setWheelRotation(nextRotation);
+
+      const remainingError = normalizeAngle(settleTargetRotation - nextRotation);
+      const settleDeadband = Math.min(stepAngle * 0.012, 0.006);
+      if (
+        Math.abs(velocity) <= wheelSettleVelocityFloor * 0.72 &&
+        Math.abs(remainingError) <= settleDeadband
+      ) {
+        wheelInertiaFrameRef.current = null;
+        return;
+      }
+
+      if (
+        Math.abs(velocity) > wheelSettleVelocityFloor ||
+        Math.abs(remainingError) > settleDeadband
+      ) {
+        wheelInertiaFrameRef.current = requestAnimationFrame(tick);
+      } else {
+        wheelInertiaFrameRef.current = null;
+      }
+    }
+    wheelInertiaFrameRef.current = requestAnimationFrame(tick);
+  }
+
   function onWheelPointerDown(e: ReactMouseEvent | ReactTouchEvent) {
+    // Cancel any in-progress inertia so the grab feels instant
+    if (wheelInertiaFrameRef.current != null) {
+      cancelAnimationFrame(wheelInertiaFrameRef.current);
+      wheelInertiaFrameRef.current = null;
+    }
+    cancelWheelSettle();
     isDraggingWheelRef.current = true;
     panStartYRef.current = getClientY(e);
     panStartRotationRef.current = wheelRotationRef.current;
+    wheelVelocityRef.current = 0;
+    wheelLastMoveYRef.current = getClientY(e);
+    wheelLastMoveTimeRef.current = performance.now();
 
     function onMove(ev: MouseEvent | TouchEvent) {
       if (!isDraggingWheelRef.current) return;
-      const dy = getClientY(ev) - panStartYRef.current;
+      const cy = getClientY(ev);
+      const now = performance.now();
+      const dt = now - wheelLastMoveTimeRef.current;
+      if (dt > 0 && dt < 100) {
+        // Negative because dragging down → wheel rotates forward (positive direction)
+        wheelVelocityRef.current = -(cy - wheelLastMoveYRef.current) * wheelRotationPerPixel / (dt / 1000);
+      }
+      wheelLastMoveYRef.current = cy;
+      wheelLastMoveTimeRef.current = now;
+
+      const dy = cy - panStartYRef.current;
       const nextRot = panStartRotationRef.current - dy * wheelRotationPerPixel;
       wheelRotationRef.current = nextRot;
       setWheelRotation(nextRot);
     }
-    function onUp(ev: MouseEvent | TouchEvent) {
+    function onUp() {
       if (!isDraggingWheelRef.current) return;
       isDraggingWheelRef.current = false;
-      const dy = getClientY(ev) - panStartYRef.current;
-      const rawRot = panStartRotationRef.current - dy * wheelRotationPerPixel;
-      snapWheelTo(snapRotationToStep(rawRot, stepAngle));
+      applyWheelInertia(wheelVelocityRef.current);
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
       window.removeEventListener('touchmove', onMove);
@@ -662,15 +811,63 @@ export function EchoScreen() {
     window.addEventListener('touchend', onUp);
   }
 
+  function applyArchiveInertia(initialVelocity: { x: number; y: number }) {
+    if (archiveInertiaFrameRef.current != null) {
+      cancelAnimationFrame(archiveInertiaFrameRef.current);
+      archiveInertiaFrameRef.current = null;
+    }
+    let vx = initialVelocity.x;
+    let vy = initialVelocity.y;
+    let lastTime = performance.now();
+
+    function tick(now: number) {
+      const dt = Math.min(now - lastTime, 64);
+      lastTime = now;
+      // Exponential friction matching the wheel feel
+      vx *= Math.exp(-dt * 0.005);
+      vy *= Math.exp(-dt * 0.005);
+      const next = clampArchiveOffset({
+        x: archiveOffsetRef.current.x + vx * (dt / 1000),
+        y: archiveOffsetRef.current.y + vy * (dt / 1000),
+      });
+      archiveOffsetRef.current = next;
+      archivePendingOffsetRef.current = next;
+      setArchiveOffset({ ...next });
+      if (Math.abs(vx) > 5 || Math.abs(vy) > 5) {
+        archiveInertiaFrameRef.current = requestAnimationFrame(tick);
+      } else {
+        archiveInertiaFrameRef.current = null;
+      }
+    }
+    archiveInertiaFrameRef.current = requestAnimationFrame(tick);
+  }
+
   function onArchivePointerDown(e: ReactMouseEvent | ReactTouchEvent) {
+    // Cancel any in-progress inertia so the grab feels instant
+    if (archiveInertiaFrameRef.current != null) {
+      cancelAnimationFrame(archiveInertiaFrameRef.current);
+      archiveInertiaFrameRef.current = null;
+    }
     isDraggingArchiveRef.current = true;
     const { x, y } = getClientXY(e);
     archivePanStartRef.current = { x, y };
     archivePanStartOffsetRef.current = { ...archiveOffsetRef.current };
+    archiveVelocityRef.current = { x: 0, y: 0 };
+    archiveLastMoveRef.current = { x, y, time: performance.now() };
 
     function onMove(ev: MouseEvent | TouchEvent) {
       if (!isDraggingArchiveRef.current) return;
       const { x: cx, y: cy } = getClientXY(ev);
+      const now = performance.now();
+      const dt = now - archiveLastMoveRef.current.time;
+      if (dt > 0 && dt < 100) {
+        archiveVelocityRef.current = {
+          x: (cx - archiveLastMoveRef.current.x) / dt * 1000,
+          y: (cy - archiveLastMoveRef.current.y) / dt * 1000,
+        };
+      }
+      archiveLastMoveRef.current = { x: cx, y: cy, time: now };
+
       const dx = cx - archivePanStartRef.current.x;
       const dy = cy - archivePanStartRef.current.y;
       const bounded = clampArchiveOffset({ x: archivePanStartOffsetRef.current.x + dx, y: archivePanStartOffsetRef.current.y + dy });
@@ -683,10 +880,11 @@ export function EchoScreen() {
         });
       }
     }
-    function onUp(ev: MouseEvent | TouchEvent) {
+    function onUp() {
       if (!isDraggingArchiveRef.current) return;
       isDraggingArchiveRef.current = false;
-      snapArchiveToNearest();
+      // Free pan: coast to a natural stop, no snap-back to center
+      applyArchiveInertia(archiveVelocityRef.current);
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
       window.removeEventListener('touchmove', onMove);
@@ -715,15 +913,31 @@ export function EchoScreen() {
       {/* MAIN VIEW - Wheel */}
       {view === 'main' && (
         <div style={{ flex: 1, position: 'relative', height: '100%' }}>
-          {/* Brand header */}
+          {/* Top bar — left: title + date, right: search */}
           <div
             style={{
               position: 'absolute', left: shellMetrics.horizontalPadding, right: shellMetrics.horizontalPadding,
-              top: shellMetrics.topPadding + 18, zIndex: 300, pointerEvents: 'none', textAlign: 'center',
+              top: shellMetrics.topPadding + 6, zIndex: 300, pointerEvents: 'none',
+              display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
             }}
           >
-            <span style={{ color: colors.echoInk, fontSize: 20, fontWeight: 700, letterSpacing: 0.45 }}>Echoes</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ color: colors.echoInk, fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>Echoes</span>
+              <span style={{ color: colors.textMuted, fontSize: 12, fontWeight: 400, letterSpacing: 0 }}>{todayLabel}</span>
+            </div>
+            <button
+              onClick={() => { setSearchQuery(''); setView('allCities'); }}
+              style={{
+                pointerEvents: 'auto', width: 40, height: 40, borderRadius: 20,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                backgroundColor: colors.echoGlass, border: `1px solid ${colors.echoLineSoft}`,
+                cursor: 'pointer', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+              }}
+            >
+              <Search size={16} color={colors.echoInk} />
+            </button>
           </div>
+
           {/* Wheel stage */}
           <div
             style={{ width: '100%', height: wheelStageHeight, overflow: 'hidden', position: 'relative' }}
@@ -743,6 +957,124 @@ export function EchoScreen() {
                 zIndex={zIndex}
               />
             ))}
+
+            {/* Focused orb info pill — shows for both city orbs and the All orb */}
+            <div
+              style={{
+                position: 'absolute',
+                left: Math.max(8, wheelInfoPanelLeft),
+                right: shellMetrics.horizontalPadding,
+                top: wheelInfoPanelTop,
+                pointerEvents: 'none',
+              }}
+            >
+              <div style={{ position: 'relative' }}>
+                <div
+                  aria-hidden
+                  style={{
+                    position: 'absolute',
+                    inset: '-38px -286px -40px -132px',
+                    overflow: 'visible',
+                    pointerEvents: 'none',
+                    zIndex: 120,
+                    maskImage: 'linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.03) 8%, rgba(0, 0, 0, 0.22) 11%, rgba(0, 0, 0, 0.58) 15%, rgba(0, 0, 0, 0.9) 19%, rgba(0, 0, 0, 1) 24%, rgba(0, 0, 0, 0.98) 58%, rgba(0, 0, 0, 0.74) 78%, rgba(0, 0, 0, 0.26) 92%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.03) 8%, rgba(0, 0, 0, 0.22) 11%, rgba(0, 0, 0, 0.58) 15%, rgba(0, 0, 0, 0.9) 19%, rgba(0, 0, 0, 1) 24%, rgba(0, 0, 0, 0.98) 58%, rgba(0, 0, 0, 0.74) 78%, rgba(0, 0, 0, 0.26) 92%, transparent 100%)',
+                  }}
+                >
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '-10%',
+                      right: '48%',
+                      top: '18%',
+                      bottom: '18%',
+                      opacity: 1,
+                      filter: 'blur(11px)',
+                      background: [
+                        `radial-gradient(ellipse 70% 72% at 24% 50%, ${cardGlowCore} 0%, ${cardGlowCore} 42%, transparent 74%)`,
+                        `radial-gradient(ellipse 42% 42% at 31% 34%, ${cardGlowMid} 0%, transparent 66%)`,
+                        `radial-gradient(ellipse 40% 40% at 32% 66%, ${cardGlowSoft} 0%, transparent 70%)`,
+                        `radial-gradient(ellipse 56% 60% at 35% 50%, ${cardGlowCore} 0%, transparent 64%)`,
+                      ].join(', '),
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '14%',
+                      right: '-62%',
+                      top: '10%',
+                      bottom: '12%',
+                      opacity: 0.36,
+                      filter: 'blur(36px)',
+                      background: [
+                        `radial-gradient(ellipse 48% 34% at 22% 50%, ${cardGlowMid} 0%, transparent 60%)`,
+                        `radial-gradient(ellipse 96% 22% at 50% 36%, ${cardGlowSoft} 0%, transparent 82%)`,
+                        `radial-gradient(ellipse 146% 22% at 82% 66%, ${cardGlowWash} 0%, transparent 96%)`,
+                      ].join(', '),
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '24%',
+                      right: '-146%',
+                      top: '2%',
+                      bottom: '4%',
+                      opacity: 0.1,
+                      filter: 'blur(64px)',
+                      background: [
+                        `radial-gradient(ellipse 120% 18% at 50% 42%, ${cardGlowWash} 0%, transparent 90%)`,
+                        `radial-gradient(ellipse 198% 20% at 90% 56%, ${cardGlowSoft} 0%, transparent 98%)`,
+                      ].join(', '),
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    position: 'relative',
+                    zIndex: 250,
+                    padding: '16px 14px 14px 10px',
+                  }}
+                >
+                  <div
+                    style={{
+                      position: 'relative',
+                      zIndex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      gap: 3,
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: colors.echoInk,
+                        fontSize: 17,
+                        fontWeight: 700,
+                        letterSpacing: -0.3,
+                        lineHeight: '22px',
+                        textShadow: '0 1px 18px rgba(255,252,248,0.30)',
+                      }}
+                    >
+                      {infoCardTitle}
+                    </span>
+                    <span
+                      style={{
+                        color: colors.textSoft,
+                        fontSize: 12,
+                        fontWeight: 500,
+                        letterSpacing: 0,
+                        lineHeight: '16px',
+                        textShadow: '0 1px 14px rgba(255,252,248,0.22)',
+                      }}
+                    >
+                      {infoCardSubtitle}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -832,21 +1164,13 @@ export function EchoScreen() {
           {/* Hero */}
           <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 18, borderRadius: 34, padding: 18, backgroundColor: colors.echoGlassHeavy, border: `1px solid ${colors.echoLineSoft}` }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <h1 style={{ color: colors.echoInk, fontSize: 34, fontWeight: 700, letterSpacing: -1, margin: 0, fontFamily: 'Georgia, serif' }}>{selectedCity.name}</h1>
-              <span style={{ color: colors.textMuted, fontSize: 12, fontWeight: 700 }}>{joinMeta([selectedCity.country, selectedCity.visitDate])}</span>
+              <h1 style={{ color: colors.echoInk, fontSize: 34, fontWeight: 700, letterSpacing: -1, margin: 0 }}>{selectedCity.name}</h1>
+              <span style={{ color: colors.textMuted, fontSize: 12, fontWeight: 700 }}>{joinMeta([selectedCity.country, formatCityVisitDate(selectedCity)])}</span>
               <p style={{ color: colors.textSoft, fontSize: 13, lineHeight: '20px', fontWeight: 500, margin: 0 }}>{selectedCity.note}</p>
               <ProgressRail progress={selectedCity.collectionProgress} />
             </div>
-            <div
-              style={{
-                width: 104, height: 104, borderRadius: 52, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: `linear-gradient(135deg, ${withAlpha(selectedCity.aura[0], 'F8')}, ${withAlpha(selectedCity.aura[1], 'DE')})`,
-                border: '1px solid rgba(255,255,255,0.9)',
-                position: 'relative',
-              }}
-            >
-              <div style={{ position: 'absolute', width: 94, height: 94, borderRadius: 47, border: `1px solid ${withAlpha(selectedCity.accent, '34')}` }} />
-              <img src={selectedCity.image} alt={selectedCity.name} style={{ width: 82, height: 82, borderRadius: 41, objectFit: 'cover' }} />
+            <div style={{ width: 104, height: 104, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src={selectedCity.image} alt={selectedCity.name} style={{ width: 104, height: 104, objectFit: 'contain', display: 'block' }} />
             </div>
           </div>
           {/* Toggle */}
@@ -862,7 +1186,7 @@ export function EchoScreen() {
             ))}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <h2 style={{ color: colors.echoInk, fontSize: 26, fontWeight: 700, letterSpacing: -0.6, margin: 0, fontFamily: 'Georgia, serif' }}>
+            <h2 style={{ color: colors.echoInk, fontSize: 26, fontWeight: 700, letterSpacing: -0.6, margin: 0 }}>
               {detailTab === 'mine' ? 'Your Echoes in this city' : 'Most active public Echoes'}
             </h2>
             <p style={{ color: colors.textSoft, fontSize: 14, lineHeight: '22px', fontWeight: 500, margin: 0 }}>
@@ -892,7 +1216,7 @@ export function EchoScreen() {
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(255,255,255,0.04), rgba(22,18,17,0.14), rgba(22,18,17,0.78))' }} />
             <div style={{ position: 'absolute', left: 20, right: 20, bottom: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <span style={{ color: 'rgba(255,255,255,0.78)', fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>{selectedCity.name.toUpperCase()}</span>
-              <h2 style={{ color: '#FFFFFF', fontSize: 34, fontWeight: 700, letterSpacing: -1, margin: 0, fontFamily: 'Georgia, serif' }}>{featuredGalleryItem.title}</h2>
+              <h2 style={{ color: '#FFFFFF', fontSize: 34, fontWeight: 700, letterSpacing: -1, margin: 0 }}>{featuredGalleryItem.title}</h2>
               <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13, lineHeight: '20px', fontWeight: 500, margin: 0 }}>{featuredGalleryItem.caption}</p>
             </div>
           </div>
@@ -905,9 +1229,9 @@ export function EchoScreen() {
             </div>
           </div>
           <div style={{ borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 8, backgroundColor: colors.echoGlassHeavy, border: `1px solid ${colors.echoLineSoft}` }}>
-            <h3 style={{ color: colors.echoInk, fontSize: 22, fontWeight: 700, margin: 0, fontFamily: 'Georgia, serif' }}>{featuredGalleryItem.area}</h3>
+            <h3 style={{ color: colors.echoInk, fontSize: 22, fontWeight: 700, margin: 0 }}>{featuredGalleryItem.area}</h3>
             <p style={{ color: colors.textSoft, fontSize: 14, lineHeight: '22px', fontWeight: 500, margin: 0 }}>
-              {joinMeta([selectedCity.country, selectedCity.visitDate, featuredGalleryItem.source === 'mine' ? 'Mine' : 'Others'])}
+              {joinMeta([selectedCity.country, formatCityVisitDate(selectedCity), featuredGalleryItem.source === 'mine' ? 'Mine' : 'Others'])}
             </p>
           </div>
         </div>

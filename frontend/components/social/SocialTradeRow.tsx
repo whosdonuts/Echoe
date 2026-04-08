@@ -59,8 +59,8 @@ export function SocialTradeRow({ name, tone, info, emphasized = false, onPress }
                   paddingRight: 10,
                   paddingTop: 6,
                   paddingBottom: 6,
-                  backgroundColor: emphasized ? '#F8E3DA' : '#F7F2EB',
-                  color: emphasized ? colors.echoDeepTerracotta : colors.echoOliveBronze,
+                  backgroundColor: emphasized ? colors.shellAccentSurface : colors.shellSurfaceMuted,
+                  color: emphasized ? colors.shellAccentText : colors.textSoft,
                   fontSize: 10,
                   fontWeight: 700,
                   letterSpacing: 0.6,
@@ -91,7 +91,7 @@ export function SocialTradeRow({ name, tone, info, emphasized = false, onPress }
         <div
           style={{
             alignSelf: 'flex-start',
-            borderRadius: 18,
+            borderRadius: 999,
             paddingLeft: 15,
             paddingRight: 15,
             paddingTop: 10,
@@ -100,12 +100,20 @@ export function SocialTradeRow({ name, tone, info, emphasized = false, onPress }
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: emphasized ? colors.echoPrimaryTerracotta : '#F6F0E8',
+            background: emphasized
+              ? 'linear-gradient(180deg, rgba(255,255,255,0.74), rgba(255,255,255,0.52))'
+              : `linear-gradient(180deg, rgba(255,255,255,0.92), ${colors.shellSurfaceMuted})`,
+            border: `1px solid ${emphasized ? 'rgba(255,255,255,0.54)' : colors.shellBorderSoft}`,
+            boxShadow: emphasized
+              ? `0 14px 24px ${colors.shellGlassShadow}, inset 0 1px 0 rgba(255,255,255,0.84)`
+              : `0 12px 20px ${colors.shellShadow}`,
+            backdropFilter: emphasized ? 'blur(24px) saturate(170%)' : undefined,
+            WebkitBackdropFilter: emphasized ? 'blur(24px) saturate(170%)' : undefined,
           }}
         >
           <span
             style={{
-              color: emphasized ? colors.echoMainWhite : colors.echoOliveBronze,
+              color: emphasized ? colors.shellAccentText : colors.textSoft,
               fontSize: 12,
               fontWeight: 700,
               letterSpacing: 0.2,
