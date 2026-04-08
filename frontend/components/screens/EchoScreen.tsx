@@ -11,11 +11,13 @@ import {
 } from 'react';
 import { ArrowLeft, Search, SlidersHorizontal, ChevronRight, Radio } from 'lucide-react';
 import {
+  EchoGlowPalette,
   EchoCity,
   EchoCollectionItem,
   EchoGalleryItem,
   allEchoCities,
   allCitiesOrbImage,
+  allOrbGlowPalette,
   getEchoCity,
   getEchoCityMineEchoes,
   getEchoCityOtherEchoes,
@@ -74,15 +76,15 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${parseInt(hex.slice(1, 3), 16)}, ${parseInt(hex.slice(3, 5), 16)}, ${parseInt(hex.slice(5, 7), 16)}, ${alpha})`;
 }
 
-/** Builds a more visible but still restrained haze palette from the selected orb metadata. */
-function makeGlowFromCity(city: EchoCity): string[] {
+function makeGlowFromPalette(palette: EchoGlowPalette): string[] {
   return [
-    hexToRgba(city.glowPalette.core, 0.38),
-    hexToRgba(city.glowPalette.mid, 0.34),
-    hexToRgba(city.glowPalette.soft, 0.26),
-    hexToRgba(city.glowPalette.wash, 0.16),
+    hexToRgba(palette.core, 0.36),
+    hexToRgba(palette.mid, 0.28),
+    hexToRgba(palette.soft, 0.18),
+    hexToRgba(palette.wash, 0.08),
   ];
 }
+function makeGlowFromCity(city: EchoCity): string[] { return makeGlowFromPalette(city.glowPalette); }
 function formatCityVisitDate(city: Pick<EchoCity, 'visitedAt'>) {
   return formatEchoFullDate(city.visitedAt);
 }
@@ -221,11 +223,12 @@ function WheelOrb({ item, active, x, y, zIndex, scale, opacity, onPress }: {
             src={orbSrc}
             alt={label}
             style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
+              width: '106%',
+              height: '106%',
+              objectFit: 'cover',
               display: 'block',
               flexShrink: 0,
+              backgroundColor: 'transparent',
             }}
           />
         </div>
@@ -666,12 +669,7 @@ export function EchoScreen() {
   const infoCardTitle = isCenteredAllOrb ? 'All' : focusedCity.name;
   const infoCardSubtitle = isCenteredAllOrb ? 'Browse all cities' : formatCityVisitDate(focusedCity);
   const [cardGlowCore, cardGlowMid, cardGlowSoft, cardGlowWash] = isCenteredAllOrb
-    ? [
-        'rgba(94, 220, 240, 0.40)',
-        'rgba(143, 213, 230, 0.32)',
-        'rgba(221, 243, 239, 0.24)',
-        'rgba(168, 214, 174, 0.10)',
-      ]
+    ? makeGlowFromPalette(allOrbGlowPalette)
     : makeGlowFromCity(focusedCity);
 
   function handleWheelItemPress(item: WheelItem, index: number, isActive: boolean) {
@@ -968,7 +966,6 @@ export function EchoScreen() {
                 right: shellMetrics.horizontalPadding,
                 top: wheelInfoPanelTop,
                 pointerEvents: 'none',
-                zIndex: 250,
               }}
             >
               <div style={{ position: 'relative' }}>
@@ -976,59 +973,59 @@ export function EchoScreen() {
                   aria-hidden
                   style={{
                     position: 'absolute',
-                    inset: '-54px -116px -56px -8px',
+                    inset: '-38px -286px -40px -132px',
                     overflow: 'visible',
                     pointerEvents: 'none',
-                    zIndex: 0,
-                    maskImage: 'linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.03) 10%, rgba(0, 0, 0, 0.28) 16%, rgba(0, 0, 0, 0.82) 24%, rgba(0, 0, 0, 1) 32%, rgba(0, 0, 0, 1) 100%)',
-                    WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.03) 10%, rgba(0, 0, 0, 0.28) 16%, rgba(0, 0, 0, 0.82) 24%, rgba(0, 0, 0, 1) 32%, rgba(0, 0, 0, 1) 100%)',
+                    zIndex: 120,
+                    maskImage: 'linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.03) 8%, rgba(0, 0, 0, 0.22) 11%, rgba(0, 0, 0, 0.58) 15%, rgba(0, 0, 0, 0.9) 19%, rgba(0, 0, 0, 1) 24%, rgba(0, 0, 0, 0.98) 58%, rgba(0, 0, 0, 0.74) 78%, rgba(0, 0, 0, 0.26) 92%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.03) 8%, rgba(0, 0, 0, 0.22) 11%, rgba(0, 0, 0, 0.58) 15%, rgba(0, 0, 0, 0.9) 19%, rgba(0, 0, 0, 1) 24%, rgba(0, 0, 0, 0.98) 58%, rgba(0, 0, 0, 0.74) 78%, rgba(0, 0, 0, 0.26) 92%, transparent 100%)',
                   }}
                 >
                   <div
                     style={{
                       position: 'absolute',
-                      left: '6%',
-                      right: '24%',
-                      top: '16%',
-                      bottom: '24%',
+                      left: '-10%',
+                      right: '48%',
+                      top: '18%',
+                      bottom: '18%',
                       opacity: 1,
-                      filter: 'blur(20px)',
+                      filter: 'blur(11px)',
                       background: [
-                        `radial-gradient(ellipse 52% 54% at 10% 50%, ${cardGlowCore} 0%, ${cardGlowCore} 22%, transparent 60%)`,
-                        `radial-gradient(ellipse 40% 30% at 22% 34%, ${cardGlowMid} 0%, transparent 66%)`,
-                        `radial-gradient(ellipse 30% 24% at 30% 70%, ${cardGlowSoft} 0%, transparent 72%)`,
+                        `radial-gradient(ellipse 70% 72% at 24% 50%, ${cardGlowCore} 0%, ${cardGlowCore} 42%, transparent 74%)`,
+                        `radial-gradient(ellipse 42% 42% at 31% 34%, ${cardGlowMid} 0%, transparent 66%)`,
+                        `radial-gradient(ellipse 40% 40% at 32% 66%, ${cardGlowSoft} 0%, transparent 70%)`,
+                        `radial-gradient(ellipse 56% 60% at 35% 50%, ${cardGlowCore} 0%, transparent 64%)`,
                       ].join(', '),
                     }}
                   />
                   <div
                     style={{
                       position: 'absolute',
-                      left: '10%',
-                      right: '-14%',
-                      top: '-4%',
-                      bottom: '6%',
-                      opacity: 0.7,
-                      filter: 'blur(40px)',
+                      left: '14%',
+                      right: '-62%',
+                      top: '10%',
+                      bottom: '12%',
+                      opacity: 0.36,
+                      filter: 'blur(36px)',
                       background: [
-                        `radial-gradient(ellipse 48% 30% at 18% 50%, ${cardGlowMid} 0%, transparent 60%)`,
-                        `radial-gradient(ellipse 66% 24% at 44% 32%, ${cardGlowSoft} 0%, transparent 78%)`,
-                        `radial-gradient(ellipse 90% 26% at 68% 70%, ${cardGlowWash} 0%, transparent 92%)`,
+                        `radial-gradient(ellipse 48% 34% at 22% 50%, ${cardGlowMid} 0%, transparent 60%)`,
+                        `radial-gradient(ellipse 96% 22% at 50% 36%, ${cardGlowSoft} 0%, transparent 82%)`,
+                        `radial-gradient(ellipse 146% 22% at 82% 66%, ${cardGlowWash} 0%, transparent 96%)`,
                       ].join(', '),
                     }}
                   />
                   <div
                     style={{
                       position: 'absolute',
-                      left: '16%',
-                      right: '-38%',
-                      top: '-18%',
-                      bottom: '-14%',
-                      opacity: 0.42,
-                      filter: 'blur(68px)',
+                      left: '24%',
+                      right: '-146%',
+                      top: '2%',
+                      bottom: '4%',
+                      opacity: 0.1,
+                      filter: 'blur(64px)',
                       background: [
-                        `radial-gradient(ellipse 40% 20% at 18% 50%, ${cardGlowCore} 0%, transparent 56%)`,
-                        `radial-gradient(ellipse 80% 22% at 46% 42%, ${cardGlowWash} 0%, transparent 84%)`,
-                        `radial-gradient(ellipse 122% 26% at 84% 58%, ${cardGlowSoft} 0%, transparent 95%)`,
+                        `radial-gradient(ellipse 120% 18% at 50% 42%, ${cardGlowWash} 0%, transparent 90%)`,
+                        `radial-gradient(ellipse 198% 20% at 90% 56%, ${cardGlowSoft} 0%, transparent 98%)`,
                       ].join(', '),
                     }}
                   />
@@ -1036,7 +1033,7 @@ export function EchoScreen() {
                 <div
                   style={{
                     position: 'relative',
-                    zIndex: 1,
+                    zIndex: 250,
                     padding: '16px 14px 14px 10px',
                   }}
                 >

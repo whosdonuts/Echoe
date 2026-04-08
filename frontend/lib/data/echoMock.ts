@@ -60,19 +60,19 @@ function createGlowPalette(core: string, mid: string, soft: string, wash: string
 }
 
 const cityGlowPalettes = {
-  'toronto-on': createGlowPalette('#C89258', '#E0B988', '#F6E2C9', '#E9C9A5'),
-  'mississauga-on': createGlowPalette('#A895C5', '#C7B7DC', '#EEE7F8', '#D9CCE9'),
-  'milton-on': createGlowPalette('#87B8A4', '#A9D2C0', '#E5F4EE', '#BFE0D2'),
-  'hamilton-on': createGlowPalette('#CB8B94', '#DEABB3', '#F7E3E7', '#E7C0C7'),
-  'etobicoke-on': createGlowPalette('#82AACC', '#A6C6E0', '#E4EFF8', '#C7DAEC'),
-  'london-on': createGlowPalette('#7EA6C0', '#A6C4D8', '#E2EFF5', '#C2D9E7'),
-  'montreal-on': createGlowPalette('#CC8050', '#E2A274', '#F8E1D0', '#EBC09E'),
-  'nyc-ny': createGlowPalette('#9F94BA', '#C0B6D7', '#EEEAF6', '#D6CFE6'),
-  'orlando-fl': createGlowPalette('#86C1B1', '#A9D8C8', '#E7F6F0', '#CDE8DB'),
-  'seattle-wa': createGlowPalette('#83ABC2', '#A7C7DA', '#E1EEF5', '#C1D8E5'),
-  'barcelona-ca': createGlowPalette('#D27B45', '#E5A26D', '#F9E0D0', '#EDBE96'),
-  'london-uk': createGlowPalette('#B59167', '#D1B18A', '#F3E5D6', '#E3CEAF'),
-  'kingston-cu': createGlowPalette('#CC7A52', '#E09A71', '#F8E1D1', '#EABB9E'),
+  'barcelona-ca': createGlowPalette('#96C09F', '#BED1A7', '#D8D398', '#D8D398'),
+  'etobicoke-on': createGlowPalette('#A5C0DE', '#BECEE6', '#D7DDF1', '#D7DDF1'),
+  'hamilton-on': createGlowPalette('#B296D1', '#D8B5E7', '#EAD0F7', '#EAD0F7'),
+  'kingston-cu': createGlowPalette('#EEAA87', '#FAC9A5', '#FDDEBD', '#FDDEBD'),
+  'london-on': createGlowPalette('#927FD3', '#C299DA', '#ECCEEE', '#ECCEEE'),
+  'london-uk': createGlowPalette('#E49E8B', '#F1BFAA', '#FBD6C1', '#FBD6C1'),
+  'milton-on': createGlowPalette('#D88364', '#F8A473', '#FCD091', '#FCD091'),
+  'mississauga-on': createGlowPalette('#C98EC1', '#EDB8DE', '#FDD7FB', '#FDD7FB'),
+  'montreal-on': createGlowPalette('#ACAE6E', '#DFB160', '#E3D7A0', '#E3D7A0'),
+  'nyc-ny': createGlowPalette('#B2C0CC', '#CAE5E8', '#E5F5F0', '#E5F5F0'),
+  'orlando-fl': createGlowPalette('#9BC098', '#C3DAAC', '#EEEEA0', '#EEEEA0'),
+  'seattle-wa': createGlowPalette('#DD7D87', '#FD97A3', '#FECFD9', '#FECFD9'),
+  'toronto-on': createGlowPalette('#E8AD90', '#FABF9C', '#FDE0B9', '#FDE0B9'),
 } as const satisfies Record<string, EchoGlowPalette>;
 
 const citySeeds: EchoCity[] = [
@@ -289,6 +289,7 @@ const citySeeds: EchoCity[] = [
 ];
 
 export const allCitiesOrbImage = '/echo-orbs/all-earth.png';
+export const allOrbGlowPalette = createGlowPalette('#5EDCF0', '#8FD5E6', '#DDF3EF', '#A8D6AE');
 
 const mineTemplates = [
   {

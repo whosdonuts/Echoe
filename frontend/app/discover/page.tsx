@@ -1,11 +1,12 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { colors } from '@/lib/theme/colors';
 
 // The map component uses mapbox-gl which requires browser APIs — SSR disabled
 const MapScreenWeb = dynamic(
   () => import('@/components/map/MapScreenWeb').then((m) => m.MapScreenWeb),
-  { ssr: false, loading: () => <div style={{ flex: 1, background: '#f0ede8' }} /> },
+  { ssr: false, loading: () => <div style={{ flex: 1, background: colors.background }} /> },
 );
 
 export default function DiscoverPage() {

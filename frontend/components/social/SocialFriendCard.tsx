@@ -14,10 +14,10 @@ type SocialFriendCardProps = {
 };
 
 const badgeStyles: Record<SocialBadgeTone, { backgroundColor: string; textColor: string }> = {
-  accent: { backgroundColor: '#F8E3DA', textColor: colors.echoDeepTerracotta },
-  sand: { backgroundColor: '#F8EBD4', textColor: colors.echoDarkCocoa },
-  soft: { backgroundColor: '#F6E9E1', textColor: colors.echoDarkCocoa },
-  neutral: { backgroundColor: '#F7F2EB', textColor: colors.echoOliveBronze },
+  accent: { backgroundColor: colors.shellAccentSurface, textColor: colors.shellAccentText },
+  sand: { backgroundColor: '#EDF3FB', textColor: colors.text },
+  soft: { backgroundColor: '#F3F6FB', textColor: colors.textSoft },
+  neutral: { backgroundColor: colors.shellSurfaceMuted, textColor: colors.textSoft },
 };
 
 export function SocialFriendCard({

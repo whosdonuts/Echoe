@@ -9,39 +9,39 @@ export function MapHudWeb({ tokenLoaded }: MapHudWebProps) {
     <div
       style={{
         position: 'absolute',
-        top: 20,
-        left: 20,
+        top: 18,
+        left: 18,
         zIndex: 50,
         display: 'flex',
         flexDirection: 'column',
-        gap: 12,
+        gap: 10,
         pointerEvents: 'none',
       }}
     >
       <div
         style={{
           alignSelf: 'flex-start',
-          padding: '10px 18px',
-          borderRadius: 18,
-          background: 'rgba(255,255,255,0.72)',
-          border: '1px solid rgba(20,10,50,0.08)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          boxShadow: '0 2px 16px rgba(20,10,50,0.07)',
+          padding: '11px 18px',
+          borderRadius: 999,
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.76))',
+          border: '1px solid rgba(255,255,255,0.74)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          boxShadow: '0 20px 38px rgba(58,74,100,0.12), inset 0 1px 0 rgba(255,255,255,0.84)',
           pointerEvents: 'auto',
         }}
       >
         <h1
           style={{
             margin: 0,
-            color: 'rgba(20,10,50,0.55)',
-            fontSize: 13,
+            color: 'rgba(32,39,51,0.64)',
+            fontSize: 11,
             fontWeight: 700,
-            letterSpacing: '0.18em',
+            letterSpacing: '0.22em',
             textTransform: 'uppercase',
           }}
         >
-          Echoes
+          Discover
         </h1>
       </div>
       <div
@@ -49,20 +49,20 @@ export function MapHudWeb({ tokenLoaded }: MapHudWebProps) {
           alignSelf: 'flex-start',
           display: 'flex',
           flexDirection: 'column',
-          gap: 8,
-          padding: '12px 14px',
-          borderRadius: 16,
-          background: 'rgba(255,255,255,0.62)',
-          border: '1px solid rgba(20,10,50,0.06)',
-          backdropFilter: 'blur(14px)',
-          WebkitBackdropFilter: 'blur(14px)',
-          boxShadow: '0 2px 12px rgba(20,10,50,0.05)',
+          gap: 9,
+          padding: '14px 15px',
+          borderRadius: 22,
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.84), rgba(255,255,255,0.68))',
+          border: '1px solid rgba(255,255,255,0.72)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          boxShadow: '0 20px 40px rgba(58,74,100,0.12), inset 0 1px 0 rgba(255,255,255,0.82)',
           pointerEvents: 'auto',
         }}
       >
-        <StatRow color="#7c3aed" text={`${westernCount} campus - ${londonCount} city`} />
-        <StatRow color="#d97706" text={`${featuredCount} featured`} />
-        <StatRow color="#d4a017" text={`${barcelonaCount} Barcelona - ${barcelonaUnlockedCount} unlocked`} />
+        <StatRow color="#6B8AB6" text={`${westernCount} campus - ${londonCount} city`} />
+        <StatRow color="#8298C6" text={`${featuredCount} featured`} />
+        <StatRow color="#9EABCF" text={`${barcelonaCount} Barcelona - ${barcelonaUnlockedCount} unlocked`} />
         <StatRow color={tokenLoaded ? '#059669' : '#dc2626'} text={`Token: ${tokenLoaded ? 'loaded' : 'missing'}`} />
       </div>
     </div>
@@ -82,7 +82,7 @@ function StatRow({ color, text }: { color: string; text: string }) {
           flexShrink: 0,
         }}
       />
-      <span style={{ color: 'rgba(20,10,50,0.45)', fontSize: 11 }}>{text}</span>
+      <span style={{ color: 'rgba(32,39,51,0.56)', fontSize: 11, fontWeight: 600 }}>{text}</span>
     </div>
   );
 }

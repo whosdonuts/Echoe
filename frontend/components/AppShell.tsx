@@ -24,13 +24,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const activeTab = TAB_ROUTES[pathname] ?? 'map';
+  const routeTone = activeTab === 'echo' ? 'echo' : 'shell';
 
   function handleTabPress(tab: TabKey) {
     router.push(ROUTE_FOR_TAB[tab]);
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-route-tone={routeTone}>
       <div className="app-content">
         {children}
       </div>
