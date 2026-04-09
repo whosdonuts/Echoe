@@ -16,7 +16,7 @@ type SocialFriendCardProps = {
 const badgeStyles: Record<SocialBadgeTone, { backgroundColor: string; textColor: string }> = {
   accent: { backgroundColor: colors.shellAccentSurface, textColor: colors.shellAccentText },
   sand: { backgroundColor: '#EDF3FB', textColor: colors.text },
-  soft: { backgroundColor: '#F3F6FB', textColor: colors.textSoft },
+  soft: { backgroundColor: '#F4F5F5', textColor: colors.textSoft },
   neutral: { backgroundColor: colors.shellSurfaceMuted, textColor: colors.textSoft },
 };
 

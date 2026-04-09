@@ -113,7 +113,7 @@ export function BottomTabBar({ activeTab, onTabPress }: BottomTabBarProps) {
               background: [
                 `radial-gradient(120% 140% at 50% -18%, ${colors.tabBarGlassGlow} 0%, rgba(255,255,255,0) 56%)`,
                 `radial-gradient(72% 108% at 12% 118%, ${colors.tabBarAccentSoft} 0%, rgba(255,255,255,0) 78%)`,
-                'radial-gradient(78% 112% at 88% -6%, rgba(185, 199, 231, 0.22) 0%, rgba(255,255,255,0) 68%)',
+                'radial-gradient(78% 112% at 88% -6%, rgba(198, 206, 223, 0.1) 0%, rgba(255,255,255,0) 68%)',
               ].join(', '),
               pointerEvents: 'none',
             }}
@@ -191,7 +191,7 @@ export function BottomTabBar({ activeTab, onTabPress }: BottomTabBarProps) {
                         background: [
                           `radial-gradient(86% 120% at 50% 0%, rgba(255,255,255,0.44) 0%, rgba(255,255,255,0) 58%)`,
                           `radial-gradient(64% 120% at 50% 118%, ${colors.tabBarAccentSoft} 0%, rgba(255,255,255,0) 78%)`,
-                          'radial-gradient(90% 110% at 82% 8%, rgba(194, 205, 234, 0.24) 0%, rgba(255,255,255,0) 72%)',
+                          'radial-gradient(90% 110% at 82% 8%, rgba(202, 209, 226, 0.12) 0%, rgba(255,255,255,0) 72%)',
                         ].join(', '),
                         pointerEvents: 'none',
                       }}

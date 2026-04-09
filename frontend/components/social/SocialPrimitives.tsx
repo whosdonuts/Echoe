@@ -85,8 +85,8 @@ export function SocialSegmentedControl({
           borderRadius: 999,
           background: [
             'radial-gradient(120% 130% at 50% -18%, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 56%)',
-            'radial-gradient(78% 110% at 12% 118%, rgba(141, 168, 219, 0.18) 0%, rgba(255,255,255,0) 76%)',
-            'radial-gradient(82% 112% at 88% -10%, rgba(199, 208, 240, 0.16) 0%, rgba(255,255,255,0) 72%)',
+            'radial-gradient(78% 110% at 12% 118%, rgba(156, 174, 208, 0.08) 0%, rgba(255,255,255,0) 76%)',
+            'radial-gradient(82% 112% at 88% -10%, rgba(210, 216, 232, 0.07) 0%, rgba(255,255,255,0) 72%)',
           ].join(', '),
           pointerEvents: 'none',
         }}
@@ -134,7 +134,7 @@ export function SocialSegmentedControl({
                   borderRadius: 999,
                   background: [
                     'radial-gradient(110% 120% at 50% 0%, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0) 54%)',
-                    'radial-gradient(80% 110% at 50% 118%, rgba(141, 168, 219, 0.16) 0%, rgba(255,255,255,0) 78%)',
+                    'radial-gradient(80% 110% at 50% 118%, rgba(156, 174, 208, 0.08) 0%, rgba(255,255,255,0) 78%)',
                   ].join(', '),
                   pointerEvents: 'none',
                 }}
@@ -194,7 +194,7 @@ export function SocialIconButton({ icon, onPress, accent = false, style }: Socia
           background: accent
             ? [
                 'radial-gradient(118% 120% at 50% 0%, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0) 56%)',
-                'radial-gradient(78% 108% at 50% 118%, rgba(141, 168, 219, 0.14) 0%, rgba(255,255,255,0) 76%)',
+                'radial-gradient(78% 108% at 50% 118%, rgba(156, 174, 208, 0.08) 0%, rgba(255,255,255,0) 76%)',
               ].join(', ')
             : 'radial-gradient(118% 120% at 50% 0%, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0) 56%)',
           pointerEvents: 'none',
