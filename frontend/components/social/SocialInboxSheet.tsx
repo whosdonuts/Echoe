@@ -71,7 +71,7 @@ export function SocialInboxSheet({ visible, items, onDelete, onClose }: SocialIn
             >
               Social Inbox
             </span>
-            <p style={{ color: colors.text, fontSize: 27, fontWeight: 700, letterSpacing: -0.5, margin: 0 }}>
+            <p className="display-title" style={{ color: colors.text, fontSize: 27, fontWeight: 900, letterSpacing: -0.5, margin: 0 }}>
               Recent updates
             </p>
             <p style={{ color: colors.textSoft, fontSize: 13, lineHeight: '19px', fontWeight: 500, margin: 0 }}>
@@ -83,20 +83,18 @@ export function SocialInboxSheet({ visible, items, onDelete, onClose }: SocialIn
             style={{
               width: 40,
               height: 40,
-              borderRadius: 20,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: `linear-gradient(180deg, ${colors.shellGlassStrong}, ${colors.shellGlass})`,
-              border: `1px solid ${colors.shellGlassBorder}`,
+              padding: 0,
+              background: 'transparent',
+              border: 'none',
               color: colors.text,
               cursor: 'pointer',
-              boxShadow: `0 12px 20px ${colors.shellGlassShadow}, inset 0 1px 0 rgba(255,255,255,0.84)`,
-              backdropFilter: 'blur(24px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+              boxShadow: 'none',
             }}
           >
-            <X size={20} />
+            <X size={20} strokeWidth={2.15} />
           </button>
         </div>
       }

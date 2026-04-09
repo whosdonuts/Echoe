@@ -12,7 +12,7 @@ import Map, {
 } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { BARCELONA_CENTER, BARCELONA_HEROES } from '@/lib/features/map/barcelona';
-import { barcelonaGeoJSON, londonGeoJSON, westernFragments } from '@/lib/features/map/runtimeData';
+import { barcelonaCount, barcelonaGeoJSON, londonCount, londonGeoJSON, westernCount, westernFragments } from '@/lib/features/map/runtimeData';
 import { getTagColor, isAcebFragment, isPremiumTag, isUnlockedTag } from '@/lib/features/map/geo';
 import type { CityMode, PopupInfo, WesternFragment } from '@/lib/features/map/types';
 import { DEMO_WALK_PATH, WALK_DURATION_MS, WALK_START, easeInOutQuad, interpolateRoute } from '@/lib/features/map/walkPath';
@@ -27,36 +27,36 @@ const INITIAL_WESTERN_ZOOM = 14.6;
 const londonGlowLayer: LayerProps = {
   id: 'london-glow', type: 'circle', source: 'london', maxzoom: 14,
   paint: {
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 4, 12, 6, 14, 9],
-    'circle-color': ['match', ['get', 'tag'], 'Featured', 'rgba(217,119,6,0.14)', 'Rare', 'rgba(124,58,237,0.12)', 'Social', 'rgba(37,99,235,0.12)', 'Archive', 'rgba(147,51,234,0.12)', 'Unlocked', 'rgba(212,160,23,0.18)', 'Legendary', 'rgba(245,158,11,0.16)', 'rgba(120,113,108,0.10)'],
-    'circle-blur': 0.7,
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 3.2, 12, 4.9, 14, 6.8],
+    'circle-color': ['match', ['get', 'tag'], 'Featured', 'rgba(191,145,74,0.14)', 'Rare', 'rgba(113,90,173,0.13)', 'Social', 'rgba(91,128,177,0.13)', 'Archive', 'rgba(128,104,164,0.13)', 'Unlocked', 'rgba(194,154,66,0.16)', 'Legendary', 'rgba(205,161,82,0.16)', 'rgba(122,132,146,0.10)'],
+    'circle-blur': 0.45,
   },
 };
 
 const londonCoreLayer: LayerProps = {
   id: 'london-core', type: 'circle', source: 'london', maxzoom: 14,
   paint: {
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2, 12, 3, 14, 4.5],
-    'circle-color': ['match', ['get', 'tag'], 'Featured', '#d97706', 'Rare', '#7c3aed', 'Social', '#2563eb', 'Archive', '#9333ea', 'Unlocked', '#d4a017', 'Legendary', '#f59e0b', '#78716c'],
-    'circle-stroke-width': 1, 'circle-stroke-color': 'rgba(255,255,255,0.55)', 'circle-opacity': 0.55,
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.1, 12, 3, 14, 4.1],
+    'circle-color': ['match', ['get', 'tag'], 'Featured', '#B9893A', 'Rare', '#6F5CB3', 'Social', '#5B80B1', 'Archive', '#7F68A4', 'Unlocked', '#C29A42', 'Legendary', '#D1A152', '#7A8492'],
+    'circle-stroke-width': 1.15, 'circle-stroke-color': 'rgba(255,255,255,0.84)', 'circle-opacity': 0.86,
   },
 };
 
 const barcelonaGlowLayer: LayerProps = {
   id: 'bcn-glow', type: 'circle', source: 'barcelona',
   paint: {
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 3, 13, 6, 15, 9, 17, 12],
-    'circle-color': ['match', ['get', 'tag'], 'Featured', 'rgba(217,119,6,0.18)', 'Rare', 'rgba(124,58,237,0.14)', 'Social', 'rgba(37,99,235,0.14)', 'Archive', 'rgba(147,51,234,0.14)', 'Unlocked', 'rgba(212,160,23,0.22)', 'Legendary', 'rgba(245,158,11,0.20)', 'rgba(120,113,108,0.12)'],
-    'circle-blur': 0.6,
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.8, 13, 4.6, 15, 6.2, 17, 8.1],
+    'circle-color': ['match', ['get', 'tag'], 'Featured', 'rgba(191,145,74,0.15)', 'Rare', 'rgba(113,90,173,0.13)', 'Social', 'rgba(91,128,177,0.13)', 'Archive', 'rgba(128,104,164,0.13)', 'Unlocked', 'rgba(194,154,66,0.17)', 'Legendary', 'rgba(205,161,82,0.17)', 'rgba(122,132,146,0.10)'],
+    'circle-blur': 0.42,
   },
 };
 
 const barcelonaCoreLayer: LayerProps = {
   id: 'bcn-core', type: 'circle', source: 'barcelona',
   paint: {
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2, 13, 3.5, 15, 5, 17, 7],
-    'circle-color': ['match', ['get', 'tag'], 'Featured', '#d97706', 'Rare', '#7c3aed', 'Social', '#2563eb', 'Archive', '#9333ea', 'Unlocked', '#d4a017', 'Legendary', '#f59e0b', '#78716c'],
-    'circle-stroke-width': 1, 'circle-stroke-color': 'rgba(255,255,255,0.6)', 'circle-opacity': 0.7,
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.1, 13, 3.2, 15, 4.4, 17, 5.7],
+    'circle-color': ['match', ['get', 'tag'], 'Featured', '#B9893A', 'Rare', '#6F5CB3', 'Social', '#5B80B1', 'Archive', '#7F68A4', 'Unlocked', '#C29A42', 'Legendary', '#D1A152', '#7A8492'],
+    'circle-stroke-width': 1.2, 'circle-stroke-color': 'rgba(255,255,255,0.86)', 'circle-opacity': 0.88,
   },
 };
 
@@ -81,6 +81,9 @@ export function MapScreenWeb() {
   const tokenLoaded = TOKEN.length > 0 && TOKEN !== 'your_mapbox_token_here';
   const isWestern = cityMode === 'western';
   const isBarcelona = cityMode === 'barcelona';
+  const currentCityLabel = isWestern ? 'London' : 'Barcelona';
+  const otherCityLabel = isWestern ? 'Barcelona' : 'London';
+  const nearbyCount = isWestern ? westernCount + londonCount : barcelonaCount;
   const westernRegular = useMemo(() => westernFragments.filter((f) => !isPremiumTag(f.tag)), []);
   const westernPremium = useMemo(() => westernFragments.filter((f) => isPremiumTag(f.tag)), []);
 
@@ -213,7 +216,13 @@ export function MapScreenWeb() {
 
   return (
     <div className="map-web-root">
-      <MapHudWeb tokenLoaded={tokenLoaded} />
+      <MapHudWeb
+        currentCityLabel={currentCityLabel}
+        nearbyCount={nearbyCount}
+        onSwitchCity={isWestern ? travelToBarcelona : travelToWestern}
+        otherCityLabel={otherCityLabel}
+        traveling={traveling}
+      />
       <Map
         attributionControl={false}
         cursor="auto"
@@ -293,14 +302,6 @@ export function MapScreenWeb() {
         ) : null}
       </Map>
 
-      {process.env.NODE_ENV !== 'production' ? (
-        <div className="map-dev-actions">
-          <button className="map-dev-button" disabled={traveling} onClick={isWestern ? travelToBarcelona : travelToWestern}>
-            {isWestern ? 'Dev: Barcelona' : 'Dev: Western'}
-          </button>
-        </div>
-      ) : null}
-
       {isWestern && !traveling ? (
         <div className="demo-walk-btn-wrap">
           <button
@@ -308,7 +309,7 @@ export function MapScreenWeb() {
             disabled={walking || walkDone}
             onClick={startWalk}
           >
-            {walkDone ? 'Arrived — tap the fragment' : walking ? 'Walking...' : 'Simulate Walk'}
+            {walkDone ? 'Arrived - tap the fragment' : walking ? 'Walking...' : 'Simulate Walk'}
           </button>
         </div>
       ) : null}
@@ -342,10 +343,13 @@ function renderOrb(fragment: WesternFragment, premium: boolean, active: boolean,
           style={{ background: color.glow }}
         />
         <div
+          className={['echo-orb__shell', premium ? 'echo-orb__shell--premium' : '', active ? 'echo-orb__shell--active' : ''].filter(Boolean).join(' ')}
+        />
+        <div
           className={['echo-orb__core', premium ? 'echo-orb__core--premium' : '', unlocked ? 'echo-orb__core--unlocked' : '', active ? 'echo-orb__core--active' : ''].filter(Boolean).join(' ')}
           style={{ background: color.core }}
         />
-        {unlocked ? <div className="echo-orb__check">✓</div> : null}
+        {unlocked ? <div className="echo-orb__status" style={{ background: color.core }} /> : null}
         {rippleVisible ? <div className="echo-ripple" style={{ borderColor: color.core }} /> : null}
       </div>
     </Marker>

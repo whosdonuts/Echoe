@@ -37,6 +37,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.display-title {
+  font-family: var(--font-montserrat-display), var(--font-quicksand), var(--font-nunito), system-ui, sans-serif;
+  font-weight: 900;
+  text-transform: lowercase;
+  text-rendering: optimizeLegibility;
+}
+
+.display-title--preserve-case {
+  text-transform: none;
+}
+
 /* App shell — centred 480px mobile container */
 .app-shell {
   display: flex;
@@ -167,8 +178,8 @@ a {
 
 .echo-orb {
   position: relative;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -176,63 +187,75 @@ a {
 }
 
 .echo-orb--premium {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
 }
 
 .echo-orb__glow {
   position: absolute;
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   border-radius: 999px;
-  filter: blur(5px);
-  opacity: 0.72;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  filter: blur(8px);
+  opacity: 0.18;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease;
+  mix-blend-mode: multiply;
 }
 
-.echo-orb__glow--premium { width: 30px; height: 30px; }
-.echo-orb__glow--unlocked { animation: orb-breathe 2.8s ease-in-out infinite; }
-.echo-orb__glow--active { opacity: 1; transform: scale(1.2); }
+.echo-orb__glow--premium { width: 24px; height: 24px; }
+.echo-orb__glow--unlocked { opacity: 0.22; }
+.echo-orb__glow--active { opacity: 0.26; transform: scale(1.08); }
+
+.echo-orb__shell {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(245,248,251,0.9));
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  box-shadow: 0 6px 14px rgba(34, 44, 58, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.echo-orb__shell--premium { width: 20px; height: 20px; }
+.echo-orb__shell--active {
+  transform: scale(1.04);
+  box-shadow: 0 8px 16px rgba(34, 44, 58, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.94);
+}
 
 .echo-orb__core {
   position: absolute;
-  width: 11px;
-  height: 11px;
+  width: 8px;
+  height: 8px;
   border-radius: 999px;
-  border: 1.5px solid rgba(255, 255, 255, 0.88);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-  transition: transform 0.15s ease;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.22);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.echo-orb__core--premium { width: 14px; height: 14px; border-width: 2px; }
+.echo-orb__core--premium { width: 10px; height: 10px; }
 .echo-orb__core--unlocked {
-  border-color: rgba(255, 230, 150, 0.92);
-  box-shadow: 0 0 8px rgba(212, 160, 23, 0.35), 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.26), 0 0 8px rgba(194, 154, 66, 0.18);
 }
-.echo-orb__core--active { transform: scale(1.2); }
+.echo-orb__core--active { transform: scale(1.08); }
 
-.echo-orb__check {
+.echo-orb__status {
   position: absolute;
-  top: 3px;
-  right: 3px;
-  width: 10px;
-  height: 10px;
+  top: 4px;
+  right: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 999px;
-  background: rgba(212, 160, 23, 0.9);
-  color: #fff;
-  font-size: 6px;
-  line-height: 10px;
-  text-align: center;
-  font-weight: 700;
+  border: 1px solid rgba(255,255,255,0.82);
+  box-shadow: 0 1px 4px rgba(20, 28, 40, 0.16);
 }
 
 .echo-ripple {
   position: absolute;
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   border-radius: 999px;
-  border: 2px solid;
-  animation: ripple-expand 0.48s ease-out forwards;
+  border: 1.5px solid;
+  animation: ripple-expand 0.56s ease-out forwards;
 }
 
 .player-halo {
@@ -293,14 +316,6 @@ a {
   color: rgba(20, 10, 50, 0.3);
 }
 
-.map-dev-actions {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 50;
-}
-
-.map-dev-button,
 .demo-walk-btn {
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.7);
@@ -416,11 +431,13 @@ a {
 }
 
 .aceb-close {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: rgba(20, 10, 50, 0.04);
-  color: rgba(20, 10, 50, 0.35);
+  width: 36px;
+  height: 36px;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(20, 10, 50, 0.44);
+  box-shadow: none;
+  padding: 0;
 }
 
 .aceb-section-label {

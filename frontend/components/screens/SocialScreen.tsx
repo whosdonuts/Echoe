@@ -88,9 +88,9 @@ function TradeDetailSheet({ trade, visible, onClose }: { trade: TradeOffer | nul
           </div>
           <button
             onClick={onClose}
-            style={{ width: 40, height: 40, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(180deg, ${colors.shellGlassStrong}, ${colors.shellGlass})`, border: `1px solid ${colors.shellGlassBorder}`, boxShadow: `0 12px 20px ${colors.shellGlassShadow}, inset 0 1px 0 rgba(255,255,255,0.84)`, cursor: 'pointer', color: colors.text, backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)' }}
+            style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, background: 'transparent', border: 'none', boxShadow: 'none', cursor: 'pointer', color: colors.text }}
           >
-            <X size={20} color={colors.text} />
+            <X size={20} strokeWidth={2.15} color={colors.text} />
           </button>
         </div>
       }
@@ -199,7 +199,7 @@ export function SocialScreen() {
               pointerEvents: 'none',
             }}
           >
-            <h2 style={{ color: colors.text, fontSize: 30, fontWeight: 700, letterSpacing: -0.6, margin: 0 }}>{pageTitle}</h2>
+            <h2 className="display-title" style={{ color: colors.text, fontSize: 30, fontWeight: 900, letterSpacing: -0.6, margin: 0 }}>{pageTitle}</h2>
           </div>
           {(showFriendsActions || showTradingActions) ? (
             <div
