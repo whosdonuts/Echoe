@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeftRight, X } from 'lucide-react';
 import {
   activeFriends,
@@ -10,13 +10,16 @@ import {
   leaderboardPodium,
   leaderboardRows,
   tradeOffers,
+  type InboxItem,
   type TradeOffer,
 } from '@/lib/data/socialMock';
 import { colors } from '@/lib/theme/colors';
 import { shellMetrics } from '@/lib/theme/layout';
 import { SocialAvatar } from '@/components/social/SocialAvatar';
+import { SocialBottomSheet, SOCIAL_BOTTOM_SHEET_ENTER_EXIT_MS } from '@/components/social/SocialBottomSheet';
 import { SocialFriendCard } from '@/components/social/SocialFriendCard';
 import { SocialInboxSheet } from '@/components/social/SocialInboxSheet';
+import { ActiveFriendsCarousel } from '@/components/social/ActiveFriendsCarousel';
 import {
   SocialCard,
   SocialIconButton,
@@ -46,68 +49,83 @@ const leaderboardScopeOptions: SegmentOption[] = [
 ];
 
 function TradeDetailSheet({ trade, visible, onClose }: { trade: TradeOffer | null; visible: boolean; onClose: () => void }) {
-  if (!trade) return null;
+  const [displayTrade, setDisplayTrade] = useState<TradeOffer | null>(trade);
+
+  useEffect(() => {
+    if (trade) {
+      setDisplayTrade(trade);
+      return;
+    }
+
+    if (!visible) {
+      const timeoutId = window.setTimeout(() => {
+        setDisplayTrade(null);
+      }, SOCIAL_BOTTOM_SHEET_ENTER_EXIT_MS);
+
+      return () => {
+        window.clearTimeout(timeoutId);
+      };
+    }
+  }, [trade, visible]);
+
+  if (!displayTrade) return null;
+
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, display: visible ? 'flex' : 'none', flexDirection: 'column', justifyContent: 'flex-end',
-        backgroundColor: 'rgba(50, 64, 90, 0.14)', zIndex: 1000, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+    <SocialBottomSheet
+      bodyStyle={{
+        paddingLeft: 20,
+        paddingRight: 20,
+        paddingBottom: 26,
       }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          maxHeight: '88%', borderTopLeftRadius: 32, borderTopRightRadius: 32,
-          background: `linear-gradient(180deg, rgba(255,255,255,0.98), ${colors.shellSurfaceSoft})`, paddingLeft: 20, paddingRight: 20, paddingTop: 10, paddingBottom: 26,
-          borderTop: `1px solid ${colors.shellBorderSoft}`, boxShadow: `0 -24px 44px ${colors.shellShadowStrong}, inset 0 1px 0 rgba(255,255,255,0.88)`, display: 'flex', flexDirection: 'column',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 12 }}>
-          <div style={{ width: 46, height: 5, borderRadius: 999, backgroundColor: 'rgba(138, 146, 157, 0.26)' }} />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+      header={
+        <div style={{ paddingLeft: 20, paddingRight: 20, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingBottom: 0, flexShrink: 0 }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <SocialAvatar name={trade.name} size={52} tone={trade.tone} />
+            <SocialAvatar name={displayTrade.name} size={52} tone={displayTrade.tone} />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
               <span style={{ color: colors.textMuted, fontSize: 11, fontWeight: 700, letterSpacing: 0.7, textTransform: 'uppercase' }}>Trade proposal</span>
-              <span style={{ color: colors.text, fontSize: 24, fontWeight: 700, letterSpacing: -0.4 }}>{trade.name}</span>
+              <span style={{ color: colors.text, fontSize: 24, fontWeight: 700, letterSpacing: -0.4 }}>{displayTrade.name}</span>
             </div>
           </div>
           <button
             onClick={onClose}
-            style={{ width: 40, height: 40, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(180deg, rgba(255,255,255,0.94), ${colors.shellSurfaceSoft})`, border: `1px solid ${colors.shellBorderSoft}`, boxShadow: `0 12px 20px ${colors.shellShadow}`, cursor: 'pointer' }}
+            style={{ width: 40, height: 40, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(180deg, ${colors.shellGlassStrong}, ${colors.shellGlass})`, border: `1px solid ${colors.shellGlassBorder}`, boxShadow: `0 12px 20px ${colors.shellGlassShadow}, inset 0 1px 0 rgba(255,255,255,0.84)`, cursor: 'pointer', color: colors.text, backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)' }}
           >
             <X size={20} color={colors.text} />
           </button>
         </div>
-        <p style={{ color: colors.textSoft, fontSize: 13, lineHeight: '19px', fontWeight: 500, paddingTop: 10, margin: 0 }}>
+      }
+      onClose={onClose}
+      visible={visible}
+      zIndex={1000}
+    >
+      <div style={{ overflowY: 'auto', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 10, overscrollBehavior: 'contain' }} className="scrollbar-hide">
+        <p style={{ color: colors.textSoft, fontSize: 13, lineHeight: '19px', fontWeight: 500, margin: 0, paddingTop: 10 }}>
           Review the swap in place, then dismiss the sheet to return to the trade list.
         </p>
-        <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 16 }} className="scrollbar-hide">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 6 }}>
           <SocialCard style={{ gap: 16, padding: 16 }}>
             <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <span style={{ flex: 1, color: colors.text, fontSize: 24, fontWeight: 700, letterSpacing: -0.5 }}>{trade.setTitle}</span>
+              <span style={{ flex: 1, color: colors.text, fontSize: 24, fontWeight: 700, letterSpacing: -0.5 }}>{displayTrade.setTitle}</span>
               <div style={{ borderRadius: 999, backgroundColor: colors.shellAccentSurface, paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 8 }}>
-                <span style={{ color: colors.shellAccentText, fontSize: 11, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase' }}>{trade.statusLabel}</span>
+                <span style={{ color: colors.shellAccentText, fontSize: 11, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase' }}>{displayTrade.statusLabel}</span>
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-              <span style={{ color: colors.textMuted, fontSize: 12, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase' }}>You</span>
+                <span style={{ color: colors.textMuted, fontSize: 12, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase' }}>You</span>
                 <div style={{ width: '100%', minHeight: 142, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: 24, paddingLeft: 12, paddingRight: 12, paddingTop: 18, paddingBottom: 18, gap: 6, background: `linear-gradient(180deg, rgba(255,255,255,0.96), ${colors.shellSurfaceMuted})`, border: `1px solid ${colors.shellBorderSoft}` }}>
-                  <span style={{ color: colors.text, fontSize: 15, lineHeight: '19px', fontWeight: 700, textAlign: 'center' }}>{trade.yourItem}</span>
-                  <span style={{ color: colors.textMuted, fontSize: 11, fontWeight: 600, textAlign: 'center' }}>{trade.yourMeta}</span>
+                  <span style={{ color: colors.text, fontSize: 15, lineHeight: '19px', fontWeight: 700, textAlign: 'center' }}>{displayTrade.yourItem}</span>
+                  <span style={{ color: colors.textMuted, fontSize: 11, fontWeight: 600, textAlign: 'center' }}>{displayTrade.yourMeta}</span>
                 </div>
               </div>
               <div style={{ width: 46, height: 46, borderRadius: 23, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(180deg, rgba(255,255,255,0.94), ${colors.shellSurfaceSoft})`, border: `1px solid ${colors.shellBorderSoft}` }}>
                 <ArrowLeftRight size={18} color={colors.shellAccent} />
               </div>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                <span style={{ color: colors.textMuted, fontSize: 12, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase' }}>{trade.name}</span>
-                <div style={{ width: '100%', minHeight: 142, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: 24, paddingLeft: 12, paddingRight: 12, paddingTop: 18, paddingBottom: 18, gap: 6, background: `linear-gradient(180deg, ${colors.shellAccentSurface}, rgba(255,255,255,0.92))`, border: `1px solid rgba(95, 125, 165, 0.18)` }}>
-                  <span style={{ color: colors.text, fontSize: 15, lineHeight: '19px', fontWeight: 700, textAlign: 'center' }}>{trade.friendItem}</span>
-                  <span style={{ color: colors.textMuted, fontSize: 11, fontWeight: 600, textAlign: 'center' }}>{trade.friendMeta}</span>
+                <span style={{ color: colors.textMuted, fontSize: 12, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase' }}>{displayTrade.name}</span>
+                <div style={{ width: '100%', minHeight: 142, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: 24, paddingLeft: 12, paddingRight: 12, paddingTop: 18, paddingBottom: 18, gap: 6, background: `linear-gradient(180deg, ${colors.shellAccentSurface}, rgba(255,255,255,0.92))`, border: '1px solid rgba(95, 125, 165, 0.18)' }}>
+                  <span style={{ color: colors.text, fontSize: 15, lineHeight: '19px', fontWeight: 700, textAlign: 'center' }}>{displayTrade.friendItem}</span>
+                  <span style={{ color: colors.textMuted, fontSize: 11, fontWeight: 600, textAlign: 'center' }}>{displayTrade.friendMeta}</span>
                 </div>
               </div>
             </div>
@@ -117,7 +135,7 @@ function TradeDetailSheet({ trade, visible, onClose }: { trade: TradeOffer | nul
           </SocialCard>
           <SocialCard style={{ gap: 8, padding: 16 }}>
             <span style={{ color: colors.textMuted, fontSize: 11, fontWeight: 700, letterSpacing: 0.7, textTransform: 'uppercase' }}>Trade status</span>
-            <span style={{ color: colors.text, fontSize: 18, lineHeight: '24px', fontWeight: 700 }}>{trade.statusText}</span>
+            <span style={{ color: colors.text, fontSize: 18, lineHeight: '24px', fontWeight: 700 }}>{displayTrade.statusText}</span>
             <p style={{ color: colors.textSoft, fontSize: 13, lineHeight: '19px', fontWeight: 500, margin: 0 }}>The proposal stays inside Social so you can review details without leaving the current list.</p>
           </SocialCard>
           <div style={{ display: 'flex', flexDirection: 'row', gap: 12 }}>
@@ -130,7 +148,7 @@ function TradeDetailSheet({ trade, visible, onClose }: { trade: TradeOffer | nul
           </div>
         </div>
       </div>
-    </div>
+    </SocialBottomSheet>
   );
 }
 
@@ -139,6 +157,7 @@ export function SocialScreen() {
   const [friendsView, setFriendsView] = useState<FriendsView>('home');
   const [leaderboardScope, setLeaderboardScope] = useState<LeaderboardScope>('communities');
   const [inboxVisible, setInboxVisible] = useState(false);
+  const [recentUpdates, setRecentUpdates] = useState<InboxItem[]>(() => inboxItems);
   const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null);
 
   const contentBottomPadding = shellMetrics.contentBottomPadding;
@@ -151,11 +170,14 @@ export function SocialScreen() {
   }, []);
 
   const selectedTrade = useMemo(() => tradeOffers.find((offer) => offer.id === selectedTradeId) ?? null, [selectedTradeId]);
+  const pageTitle = primaryTab === 'leaderboard' ? 'Leaderboard' : primaryTab === 'friends' ? 'Friends' : 'Trading';
+  const showFriendsActions = primaryTab === 'friends';
+  const showTradingActions = primaryTab === 'trading';
 
   return (
     <div style={{ width: '100%', height: '100%', backgroundColor: colors.shellCanvas, display: 'flex', flexDirection: 'column' }}>
       {/* Shared header */}
-      <div style={{ paddingTop: shellMetrics.topPadding, paddingLeft: shellMetrics.horizontalPadding, paddingRight: shellMetrics.horizontalPadding, paddingBottom: 14, backgroundColor: colors.shellCanvas, borderBottom: `1px solid ${colors.shellBorderSoft}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ paddingTop: shellMetrics.topPadding, paddingLeft: shellMetrics.horizontalPadding, paddingRight: shellMetrics.horizontalPadding, paddingBottom: 14, backgroundColor: colors.shellCanvas, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '100%', maxWidth: 368 }}>
           <SocialSegmentedControl activeKey={primaryTab} fullWidth onChange={(next) => setPrimaryTab(next as PrimaryTab)} options={primaryOptions} />
         </div>
@@ -166,41 +188,55 @@ export function SocialScreen() {
         style={{ flex: 1, overflowY: 'auto', paddingTop: 22, paddingLeft: shellMetrics.horizontalPadding, paddingRight: shellMetrics.horizontalPadding, paddingBottom: contentBottomPadding, display: 'flex', flexDirection: 'column', gap: 24 }}
         className="scrollbar-hide"
       >
+        <div style={{ position: 'relative', minHeight: 42, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingTop: 2 }}>
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pointerEvents: 'none',
+            }}
+          >
+            <h2 style={{ color: colors.text, fontSize: 30, fontWeight: 700, letterSpacing: -0.6, margin: 0 }}>{pageTitle}</h2>
+          </div>
+          {(showFriendsActions || showTradingActions) ? (
+            <div
+              style={{
+                width: 92,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                gap: 8,
+                position: 'relative',
+                zIndex: 1,
+              }}
+            >
+              <SocialIconButton icon="mail-outline" onPress={() => setInboxVisible(true)} />
+              {showFriendsActions ? (
+                <SocialIconButton
+                  accent={friendsView === 'list'}
+                  icon="person-add-outline"
+                  onPress={() => setFriendsView((c) => (c === 'home' ? 'list' : 'home'))}
+                />
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
         {primaryTab === 'friends' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
-              <SocialIconButton icon="mail-outline" onPress={() => setInboxVisible(true)} />
-              <SocialIconButton
-                accent={friendsView === 'list'}
-                icon="person-add-outline"
-                onPress={() => setFriendsView((c) => (c === 'home' ? 'list' : 'home'))}
-              />
-            </div>
             <SocialSegmentedControl activeKey={friendsView} compact onChange={(next) => setFriendsView(next as FriendsView)} options={friendsViewOptions} style={{ alignSelf: 'center' }} />
 
             {friendsView === 'home' ? (
               <>
-                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 999, background: `linear-gradient(180deg, rgba(255,255,255,0.96), ${colors.shellSurfaceSoft})`, border: `1px solid ${colors.shellBorderSoft}`, boxShadow: `0 14px 24px ${colors.shellShadow}`, paddingLeft: 12, paddingRight: 12, paddingTop: 9, paddingBottom: 9 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.shellAccent }} />
-                    <span style={{ color: colors.text, fontSize: 12, fontWeight: 700, letterSpacing: 0.2 }}>5 active now</span>
-                  </div>
-                </div>
-                <SocialCard style={{ paddingLeft: 16, paddingRight: 16, paddingTop: 16, paddingBottom: 16, gap: 14 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <SocialCard style={{ paddingTop: 16, paddingBottom: 16, gap: 14, overflow: 'hidden' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingLeft: 16, paddingRight: 16 }}>
                     <span style={{ color: colors.textMuted, fontSize: 11, fontWeight: 700, letterSpacing: 0.7, textTransform: 'uppercase' }}>Live circle</span>
                     <span style={{ color: colors.text, fontSize: 22, fontWeight: 700, letterSpacing: -0.35 }}>Friends currently active</span>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'row', gap: 14, overflowX: 'auto', paddingRight: 8 }} className="scrollbar-hide">
-                    {activeFriends.map((friend) => (
-                      <div key={friend.id} style={{ width: 76, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                        <SocialAvatar active={friend.active} name={friend.name} tone={friend.tone} />
-                        <span style={{ width: '100%', color: colors.textSoft, fontSize: 12, fontWeight: 600, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {friend.name.split(' ')[0]}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  <ActiveFriendsCarousel friends={activeFriends} />
                 </SocialCard>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {friendActivities.map((activity) => (
@@ -234,9 +270,6 @@ export function SocialScreen() {
 
         {primaryTab === 'leaderboard' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 2 }}>
-              <h2 style={{ color: colors.text, fontSize: 30, fontWeight: 700, letterSpacing: -0.6, margin: 0 }}>Leaderboard</h2>
-            </div>
             <SocialSegmentedControl activeKey={leaderboardScope} compact onChange={(next) => setLeaderboardScope(next as LeaderboardScope)} options={leaderboardScopeOptions} style={{ alignSelf: 'center' }} />
             <SocialCard style={{ paddingLeft: 16, paddingRight: 16, paddingTop: 16, paddingBottom: 20, gap: 18 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -287,14 +320,6 @@ export function SocialScreen() {
 
         {primaryTab === 'trading' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
-              <SocialIconButton icon="mail-outline" onPress={() => setInboxVisible(true)} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-              <div style={{ borderRadius: 999, backgroundColor: colors.shellAccentSurface, paddingLeft: 12, paddingRight: 12, paddingTop: 9, paddingBottom: 9 }}>
-                <span style={{ color: colors.shellAccentText, fontSize: 12, fontWeight: 700, letterSpacing: 0.2 }}>{tradeOffers.length} tradeable fragments available</span>
-              </div>
-            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {tradeOffers.map((offer) => (
                 <SocialTradeRow emphasized={offer.emphasized} info={offer.info} key={offer.id} name={offer.name} onPress={() => setSelectedTradeId(offer.id)} tone={offer.tone} />
@@ -304,7 +329,7 @@ export function SocialScreen() {
         )}
       </div>
 
-      <SocialInboxSheet items={inboxItems} onClose={() => setInboxVisible(false)} visible={inboxVisible} />
+      <SocialInboxSheet items={recentUpdates} onClose={() => setInboxVisible(false)} onDelete={(id) => setRecentUpdates((current) => current.filter((item) => item.id !== id))} visible={inboxVisible} />
       <TradeDetailSheet onClose={() => setSelectedTradeId(null)} trade={selectedTrade} visible={selectedTrade !== null} />
     </div>
   );
