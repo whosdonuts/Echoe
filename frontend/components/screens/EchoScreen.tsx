@@ -10,6 +10,7 @@ import {
   TouchEvent as ReactTouchEvent,
 } from 'react';
 import { ArrowLeft, Search, SlidersHorizontal, ChevronRight, Radio } from 'lucide-react';
+import { SlidingPill } from '@/components/ui/SlidingPill';
 import {
   EchoGlowPalette,
   EchoCity,
@@ -148,14 +149,15 @@ function ProgressRail({ progress }: { progress: number }) {
   );
 }
 
-function BackPill({ label, onPress }: { label: string; onPress: () => void }) {
+function BackPill({ flat = false, label, onPress }: { flat?: boolean; label: string; onPress: () => void }) {
   return (
     <button
       onClick={onPress}
       style={{
         display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8,
-        borderRadius: 999, paddingLeft: 13, paddingRight: 13, paddingTop: 10, paddingBottom: 10,
-        backgroundColor: colors.echoGlass, border: `1px solid ${colors.echoLineSoft}`,
+        borderRadius: 999, paddingLeft: flat ? 4 : 13, paddingRight: flat ? 4 : 13, paddingTop: flat ? 10 : 10, paddingBottom: flat ? 10 : 10,
+        backgroundColor: flat ? 'transparent' : colors.echoGlass, border: flat ? 'none' : `1px solid ${colors.echoLineSoft}`,
+        boxShadow: flat ? 'none' : undefined,
         cursor: 'pointer', color: colors.echoInk,
       }}
     >
@@ -899,7 +901,13 @@ export function EchoScreen() {
   return (
     <div
       ref={screenRef}
-      style={{ width: '100%', height: '100%', backgroundColor: colors.echoPaper, position: 'relative', overflow: 'hidden' }}
+      style={{
+        width: '100%',
+        height: '100%',
+        background: `linear-gradient(180deg, ${colors.echoPaperSoft}, ${colors.echoPaper})`,
+        position: 'relative',
+        overflow: 'hidden',
+      }}
     >
       {/* Atmosphere blurs */}
       {(view === 'cityDetail' || view === 'gallery') && (
@@ -922,7 +930,7 @@ export function EchoScreen() {
             }}
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ color: colors.echoInk, fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>Echoes</span>
+              <span className="display-title" style={{ color: colors.echoInk, fontSize: 22, fontWeight: 900, letterSpacing: -0.3 }}>Echoes</span>
               <span style={{ color: colors.textMuted, fontSize: 12, fontWeight: 400, letterSpacing: 0 }}>{todayLabel}</span>
             </div>
             <button
@@ -930,8 +938,8 @@ export function EchoScreen() {
               style={{
                 pointerEvents: 'auto', width: 40, height: 40, borderRadius: 20,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                backgroundColor: colors.echoGlass, border: `1px solid ${colors.echoLineSoft}`,
-                cursor: 'pointer', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+                backgroundColor: 'transparent', border: 'none',
+                cursor: 'pointer', boxShadow: 'none',
               }}
             >
               <Search size={16} color={colors.echoInk} />
@@ -1154,49 +1162,118 @@ export function EchoScreen() {
       {/* CITY DETAIL VIEW */}
       {view === 'cityDetail' && (
         <div
-          style={{ height: '100%', overflowY: 'auto', paddingTop: shellMetrics.topPadding, paddingLeft: shellMetrics.horizontalPadding, paddingRight: shellMetrics.horizontalPadding, paddingBottom: contentBottomPadding, display: 'flex', flexDirection: 'column', gap: 20 }}
+          style={{
+            height: '100%',
+            overflowY: 'auto',
+            paddingTop: shellMetrics.topPadding,
+            paddingLeft: shellMetrics.horizontalPadding,
+            paddingRight: shellMetrics.horizontalPadding,
+            paddingBottom: contentBottomPadding,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 22,
+          }}
           className="scrollbar-hide"
         >
-          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <BackPill label={cityOrigin === 'allCities' ? 'All' : 'Echo'} onPress={handleBack} />
-            <span style={{ color: colors.textMuted, fontSize: 11, fontWeight: 700, letterSpacing: 0.8, textTransform: 'uppercase' }}>{selectedCity.country}</span>
-          </div>
-          {/* Hero */}
-          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 18, borderRadius: 34, padding: 18, backgroundColor: colors.echoGlassHeavy, border: `1px solid ${colors.echoLineSoft}` }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <h1 style={{ color: colors.echoInk, fontSize: 34, fontWeight: 700, letterSpacing: -1, margin: 0 }}>{selectedCity.name}</h1>
-              <span style={{ color: colors.textMuted, fontSize: 12, fontWeight: 700 }}>{joinMeta([selectedCity.country, formatCityVisitDate(selectedCity)])}</span>
-              <p style={{ color: colors.textSoft, fontSize: 13, lineHeight: '20px', fontWeight: 500, margin: 0 }}>{selectedCity.note}</p>
-              <ProgressRail progress={selectedCity.collectionProgress} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18, paddingTop: 4 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 12 }}>
+              <div style={{ justifySelf: 'start' }}>
+                <BackPill flat label={cityOrigin === 'allCities' ? 'All' : 'Echo'} onPress={handleBack} />
+              </div>
+              <h1
+                className="display-title"
+                style={{
+                  margin: 0,
+                  color: colors.text,
+                  fontSize: 34,
+                  lineHeight: 1.05,
+                  fontWeight: 900,
+                  letterSpacing: -1.1,
+                  textAlign: 'center',
+                }}
+              >
+                {selectedCity.name}
+              </h1>
+              <div />
             </div>
-            <div style={{ width: 104, height: 104, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img src={selectedCity.image} alt={selectedCity.name} style={{ width: 104, height: 104, objectFit: 'contain', display: 'block' }} />
-            </div>
+            <div style={{ height: 1, backgroundColor: colors.borderSoft }} />
           </div>
-          {/* Toggle */}
-          <div style={{ display: 'flex', flexDirection: 'row', gap: 6, padding: 4, borderRadius: 999, backgroundColor: colors.echoGlass, border: `1px solid ${colors.echoLineSoft}` }}>
+          <div
+            style={{
+              position: 'relative',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+              alignItems: 'center',
+              padding: 4,
+              borderRadius: 999,
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.96), rgba(246,248,251,0.98))',
+              border: `1px solid ${colors.shellBorderSoft}`,
+              boxShadow: `0 14px 30px ${colors.shellShadow}`,
+            }}
+          >
+            <SlidingPill activeIndex={detailTab === 'mine' ? 0 : 1} gap={0} inset={4} optionCount={2} style={{ borderRadius: 999 }}>
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 999,
+                  background: colors.activePill,
+                  boxShadow: `0 12px 24px ${colors.activePillShadow}`,
+                }}
+              />
+            </SlidingPill>
             {(['mine', 'others'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setDetailTab(tab)}
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 999, paddingTop: 11, paddingBottom: 11, backgroundColor: detailTab === tab ? colors.echoInk : 'transparent', border: 'none', cursor: 'pointer' }}
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 999,
+                  paddingTop: 12,
+                  paddingBottom: 12,
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'color 180ms ease',
+                }}
               >
-                <span style={{ color: detailTab === tab ? '#FFFFFF' : colors.echoInk, fontSize: 13, fontWeight: 700 }}>{tab === 'mine' ? 'Mine' : 'Others'}</span>
+                <span
+                  style={{
+                    color: detailTab === tab ? colors.activePillText : colors.textSoft,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    letterSpacing: -0.1,
+                    transition: 'color 180ms ease',
+                  }}
+                >
+                  {tab === 'mine' ? 'Mine' : 'Others'}
+                </span>
               </button>
             ))}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <h2 style={{ color: colors.echoInk, fontSize: 26, fontWeight: 700, letterSpacing: -0.6, margin: 0 }}>
-              {detailTab === 'mine' ? 'Your Echoes in this city' : 'Most active public Echoes'}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <h2
+              className="display-title"
+              style={{
+                color: colors.text,
+                fontSize: 24,
+                fontWeight: 900,
+                letterSpacing: -0.7,
+                margin: 0,
+                textAlign: 'center',
+              }}
+            >
+              {detailTab === 'mine' ? 'Your echoes' : 'Most active echoes'}
             </h2>
-            <p style={{ color: colors.textSoft, fontSize: 14, lineHeight: '22px', fontWeight: 500, margin: 0 }}>
-              {detailTab === 'mine' ? 'Collected pieces stay clear. Uncollected ones remain veiled and inaccessible.' : 'Ordered by popularity and activity so the strongest public signals surface first.'}
-            </p>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {(detailTab === 'mine' ? mineEchoes : otherEchoes).map((item, index) => (
-              <EchoCard key={item.id} height={cardHeights[index % cardHeights.length]} item={item} mode={detailTab} onPress={() => openGallery(item.id, selectedCity.id)} />
-            ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {(detailTab === 'mine' ? mineEchoes : otherEchoes).map((item, index) => (
+                <EchoCard key={item.id} height={cardHeights[index % cardHeights.length]} item={item} mode={detailTab} onPress={() => openGallery(item.id, selectedCity.id)} />
+              ))}
+            </div>
           </div>
         </div>
       )}

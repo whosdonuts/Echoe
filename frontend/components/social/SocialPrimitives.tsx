@@ -2,6 +2,7 @@
 
 import { CSSProperties, ReactNode } from 'react';
 import { Map, Radio, Users, Compass, User, Mail, UserPlus, Trophy, ArrowLeftRight } from 'lucide-react';
+import { SlidingPill } from '@/components/ui/SlidingPill';
 import { colors } from '@/lib/theme/colors';
 
 export type SegmentOption = {
@@ -58,17 +59,24 @@ export function SocialSegmentedControl({
   fullWidth = false,
   compact = false,
 }: SocialSegmentedControlProps) {
+  const activeIndex = Math.max(0, options.findIndex((option) => option.key === activeKey));
+  const slotWidth = Math.max(
+    compact ? 94 : 108,
+    ...options.map((option) => option.label.length * (compact ? 7.2 : 8.1) + (compact ? 34 : 38)),
+  );
+
   return (
     <div
       style={{
         position: 'relative',
-        display: 'flex',
-        flexDirection: 'row',
+        display: 'grid',
+        gridTemplateColumns: `repeat(${Math.max(options.length, 1)}, minmax(0, 1fr))`,
         alignItems: 'center',
         gap: 4,
         padding: 5,
         borderRadius: 999,
         overflow: 'hidden',
+        width: fullWidth ? '100%' : slotWidth * Math.max(options.length, 1) + 4 * Math.max(0, options.length - 1) + 10,
         background: `linear-gradient(180deg, ${colors.shellGlassStrong}, ${colors.shellGlass})`,
         border: `1px solid ${colors.shellGlassBorder}`,
         boxShadow: `0 20px 34px ${colors.shellGlassShadow}, inset 0 1px 0 ${colors.shellGlassHighlight}`,
@@ -91,6 +99,31 @@ export function SocialSegmentedControl({
           pointerEvents: 'none',
         }}
       />
+      <SlidingPill activeIndex={activeIndex} gap={4} inset={5} optionCount={options.length} style={{ borderRadius: 999 }}>
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 999,
+            background: `linear-gradient(180deg, rgba(39, 35, 34, 0.98), ${colors.activePill})`,
+            boxShadow: `0 12px 24px ${colors.activePillShadow}, inset 0 1px 0 rgba(255,255,255,0.12)`,
+            border: `1px solid ${colors.activePillBorder}`,
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              borderRadius: 999,
+              background: [
+                'radial-gradient(110% 120% at 50% 0%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 54%)',
+                'radial-gradient(80% 110% at 50% 118%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 78%)',
+              ].join(', '),
+            }}
+          />
+        </div>
+      </SlidingPill>
       {options.map((option) => {
         const active = option.key === activeKey;
         return (
@@ -108,45 +141,25 @@ export function SocialSegmentedControl({
               paddingRight: 14,
               paddingTop: compact ? 8 : 10,
               paddingBottom: compact ? 8 : 10,
-              flex: fullWidth ? 1 : undefined,
+              width: '100%',
               overflow: 'hidden',
-              background: active
-                ? 'linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.5))'
-                : 'transparent',
-              boxShadow: active
-                ? `0 12px 24px ${colors.shellShadow}, inset 0 1px 0 rgba(255,255,255,0.9)`
-                : 'none',
-              border: `1px solid ${active ? 'rgba(255,255,255,0.54)' : 'transparent'}`,
-              backdropFilter: active ? 'blur(24px) saturate(180%)' : undefined,
-              WebkitBackdropFilter: active ? 'blur(24px) saturate(180%)' : undefined,
+              background: 'transparent',
+              boxShadow: 'none',
+              border: '1px solid transparent',
               cursor: 'pointer',
-              transition: 'background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease',
+              transition: 'color 0.18s ease',
               whiteSpace: 'nowrap',
-              transform: active ? 'translateY(-1px)' : 'translateY(0)',
+              zIndex: 1,
             }}
           >
-            {active ? (
-              <div
-                aria-hidden
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  borderRadius: 999,
-                  background: [
-                    'radial-gradient(110% 120% at 50% 0%, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0) 54%)',
-                    'radial-gradient(80% 110% at 50% 118%, rgba(156, 174, 208, 0.08) 0%, rgba(255,255,255,0) 78%)',
-                  ].join(', '),
-                  pointerEvents: 'none',
-                }}
-              />
-            ) : null}
             <span
               style={{
                 position: 'relative',
-                color: active ? colors.text : colors.textSoft,
+                color: active ? colors.activePillText : colors.textSoft,
                 fontSize: 12,
                 fontWeight: 700,
                 letterSpacing: 0.16,
+                transition: 'color 0.18s ease',
               }}
             >
               {option.label}

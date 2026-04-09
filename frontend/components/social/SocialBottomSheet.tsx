@@ -12,6 +12,7 @@ type SocialBottomSheetProps = {
   contentClassName?: string;
   maxWidth?: number;
   zIndex?: number;
+  expandedOnly?: boolean;
 };
 
 type SheetSnap = 'partial' | 'expanded';
@@ -40,6 +41,7 @@ export function SocialBottomSheet({
   contentClassName,
   maxWidth = 480,
   zIndex = 200,
+  expandedOnly = false,
 }: SocialBottomSheetProps) {
   const closeTimerRef = useRef<number | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
@@ -78,7 +80,7 @@ export function SocialBottomSheet({
 
     if (visible) {
       setIsMounted(true);
-      setSnap('partial');
+      setSnap(expandedOnly ? 'expanded' : 'partial');
       setIsDragging(false);
       setTrackedDragOffset(0);
 
@@ -108,7 +110,7 @@ export function SocialBottomSheet({
         closeTimerRef.current = null;
       }
     };
-  }, [visible]);
+  }, [expandedOnly, visible]);
 
   useEffect(() => {
     return () => {
@@ -121,9 +123,9 @@ export function SocialBottomSheet({
   if (!isMounted) return null;
 
   const sheetHeight = Math.max(320, Math.min(viewportHeight - SHEET_TOP_GAP, SHEET_MAX_HEIGHT));
-  const partialOffset = Math.round(sheetHeight * (1 - PARTIAL_REVEAL_RATIO));
+  const partialOffset = expandedOnly ? 0 : Math.round(sheetHeight * (1 - PARTIAL_REVEAL_RATIO));
   const closedOffset = sheetHeight + 40;
-  const settledOffset = snap === 'expanded' ? 0 : partialOffset;
+  const settledOffset = expandedOnly ? 0 : snap === 'expanded' ? 0 : partialOffset;
   const translateY = !isOpen ? closedOffset : isDragging ? dragOffset : settledOffset;
 
   const endDrag = (pointerId?: number) => {
@@ -133,6 +135,22 @@ export function SocialBottomSheet({
 
     if (handleRef.current?.hasPointerCapture(dragState.pointerId)) {
       handleRef.current.releasePointerCapture(dragState.pointerId);
+    }
+
+    if (expandedOnly) {
+      const closeThreshold = Math.max(120, Math.min(220, sheetHeight * 0.18));
+      const shouldClose = dragOffsetRef.current >= closeThreshold;
+
+      setIsDragging(false);
+      dragStateRef.current = null;
+
+      if (shouldClose) {
+        onClose();
+        return;
+      }
+
+      setTrackedDragOffset(0);
+      return;
     }
 
     const nextSnap = dragOffsetRef.current <= partialOffset * 0.55 ? 'expanded' : 'partial';
@@ -160,13 +178,14 @@ export function SocialBottomSheet({
     const dragState = dragStateRef.current;
     if (!dragState || dragState.pointerId !== event.pointerId) return;
 
+    const maxOffset = expandedOnly ? closedOffset : partialOffset;
     const rawOffset = dragState.startOffset + (event.clientY - dragState.startY);
-    let nextOffset = clamp(rawOffset, 0, partialOffset);
+    let nextOffset = clamp(rawOffset, 0, maxOffset);
 
     if (rawOffset < 0) {
       nextOffset = rawOffset * 0.24;
-    } else if (rawOffset > partialOffset) {
-      nextOffset = partialOffset + (rawOffset - partialOffset) * 0.24;
+    } else if (rawOffset > maxOffset) {
+      nextOffset = maxOffset + (rawOffset - maxOffset) * 0.24;
     }
 
     setTrackedDragOffset(nextOffset);

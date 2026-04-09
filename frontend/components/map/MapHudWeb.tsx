@@ -1,12 +1,62 @@
-import { barcelonaCount, barcelonaUnlockedCount, featuredCount, londonCount, westernCount } from '@/lib/features/map/runtimeData';
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 type MapHudWebProps = {
-  tokenLoaded: boolean;
+  currentCityLabel: string;
+  nearbyCount: number;
+  onSwitchCity: () => void;
+  otherCityLabel: string;
+  traveling: boolean;
 };
 
-export function MapHudWeb({ tokenLoaded }: MapHudWebProps) {
+export function MapHudWeb({ currentCityLabel, nearbyCount, onSwitchCity, otherCityLabel, traveling }: MapHudWebProps) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [panelWidth, setPanelWidth] = useState<number | null>(null);
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    function syncPanelWidth() {
+      if (triggerRef.current) {
+        setPanelWidth(triggerRef.current.offsetWidth);
+      }
+    }
+
+    syncPanelWidth();
+    window.addEventListener('resize', syncPanelWidth);
+
+    return () => {
+      window.removeEventListener('resize', syncPanelWidth);
+    };
+  }, []);
+
   return (
     <div
+      ref={rootRef}
       style={{
         position: 'absolute',
         top: 18,
@@ -14,75 +64,115 @@ export function MapHudWeb({ tokenLoaded }: MapHudWebProps) {
         zIndex: 50,
         display: 'flex',
         flexDirection: 'column',
-        gap: 10,
+        gap: 12,
         pointerEvents: 'none',
+        alignItems: 'flex-start',
       }}
     >
-      <div
+      <button
+        ref={triggerRef}
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
         style={{
           alignSelf: 'flex-start',
-          padding: '11px 18px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '12px 18px',
           borderRadius: 999,
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.76))',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,251,0.84))',
           border: '1px solid rgba(255,255,255,0.74)',
           backdropFilter: 'blur(24px) saturate(180%)',
           WebkitBackdropFilter: 'blur(24px) saturate(180%)',
           boxShadow: '0 20px 38px rgba(58,74,100,0.12), inset 0 1px 0 rgba(255,255,255,0.84)',
           pointerEvents: 'auto',
+          cursor: 'pointer',
         }}
       >
-        <h1
+        <span
+          className="display-title"
           style={{
             margin: 0,
-            color: 'rgba(32,39,51,0.64)',
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.22em',
-            textTransform: 'uppercase',
+            color: 'rgba(32,39,51,0.84)',
+            fontSize: 22,
+            fontWeight: 900,
+            letterSpacing: '-0.04em',
+            lineHeight: 1,
           }}
         >
           Discover
-        </h1>
-      </div>
-      <div
-        style={{
-          alignSelf: 'flex-start',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 9,
-          padding: '14px 15px',
-          borderRadius: 22,
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.84), rgba(255,255,255,0.68))',
-          border: '1px solid rgba(255,255,255,0.72)',
-          backdropFilter: 'blur(24px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          boxShadow: '0 20px 40px rgba(58,74,100,0.12), inset 0 1px 0 rgba(255,255,255,0.82)',
-          pointerEvents: 'auto',
-        }}
-      >
-        <StatRow color="#6B8AB6" text={`${westernCount} campus - ${londonCount} city`} />
-        <StatRow color="#8298C6" text={`${featuredCount} featured`} />
-        <StatRow color="#9EABCF" text={`${barcelonaCount} Barcelona - ${barcelonaUnlockedCount} unlocked`} />
-        <StatRow color={tokenLoaded ? '#059669' : '#dc2626'} text={`Token: ${tokenLoaded ? 'loaded' : 'missing'}`} />
-      </div>
-    </div>
-  );
-}
+        </span>
+        <ChevronDown
+          size={18}
+          color="rgba(32,39,51,0.62)"
+          style={{
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 240ms cubic-bezier(0.22, 1, 0.36, 1)',
+          }}
+        />
+      </button>
 
-function StatRow({ color, text }: { color: string; text: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <span
-        style={{
-          width: 6,
-          height: 6,
-          borderRadius: 999,
-          background: color,
-          display: 'inline-block',
-          flexShrink: 0,
-        }}
-      />
-      <span style={{ color: 'rgba(32,39,51,0.56)', fontSize: 11, fontWeight: 600 }}>{text}</span>
+      {open ? (
+        <div
+          style={{
+            alignSelf: 'flex-start',
+            width: panelWidth ?? 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 16,
+            padding: '16px 16px 14px',
+            borderRadius: 24,
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,251,0.86))',
+            border: '1px solid rgba(255,255,255,0.76)',
+            backdropFilter: 'blur(28px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+            boxShadow: '0 24px 42px rgba(58,74,100,0.14), inset 0 1px 0 rgba(255,255,255,0.86)',
+            pointerEvents: 'auto',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ color: 'rgba(32,39,51,0.46)', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              {currentCityLabel}
+            </span>
+            <p style={{ margin: 0, color: 'rgba(32,39,51,0.82)', fontSize: 15, fontWeight: 700, letterSpacing: -0.2 }}>
+              {nearbyCount} nearby
+            </p>
+          </div>
+
+          <div style={{ height: 1, background: 'rgba(198,206,218,0.42)' }} />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ color: 'rgba(32,39,51,0.46)', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              Other cities
+            </span>
+            <button
+              disabled={traveling}
+              onClick={() => {
+                setOpen(false);
+                onSwitchCity();
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                width: '100%',
+                padding: '12px 14px',
+                borderRadius: 18,
+                border: '1px solid rgba(203,210,220,0.52)',
+                background: traveling
+                  ? 'linear-gradient(180deg, rgba(244,246,248,0.9), rgba(238,241,245,0.84))'
+                  : 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244,247,250,0.94))',
+                boxShadow: '0 14px 24px rgba(58,74,100,0.08), inset 0 1px 0 rgba(255,255,255,0.9)',
+                cursor: traveling ? 'default' : 'pointer',
+              }}
+            >
+              <span style={{ color: traveling ? 'rgba(32,39,51,0.4)' : 'rgba(32,39,51,0.82)', fontSize: 14, fontWeight: 700 }}>
+                {otherCityLabel}
+              </span>
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
