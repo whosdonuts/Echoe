@@ -1,4 +1,5 @@
 import type { EchoOrbKey } from '@/lib/data/echoOrbAssets';
+import { uploadedMineEchoesByCity, uploadedOtherEchoesByCity, webFallbackEchoesByCity } from '@/lib/data/uploadedCityAssets';
 import { formatEchoFullDate } from '@/lib/formatEchoDate';
 
 export type EchoFilterKey = 'city' | 'country' | 'date' | 'recency';
@@ -399,12 +400,27 @@ export const allEchoCities = citySeeds;
 export const recentEchoCities = allEchoCities.slice(0, 12);
 
 const mineEchoes: EchoCollectionItem[] = allEchoCities.flatMap((city, cityIndex) => {
+  const uploadedMineEchoes = uploadedMineEchoesByCity[city.id as keyof typeof uploadedMineEchoesByCity];
+  const webFallbackEchoes = webFallbackEchoesByCity[city.id as keyof typeof webFallbackEchoesByCity];
   const visibleCount = Math.max(
     2,
     Math.min(mineTemplates.length - 1, Math.round(city.collectionProgress * mineTemplates.length)),
   );
 
-  return mineTemplates.map((template, index) => ({
+  const uploadedItems = (uploadedMineEchoes ?? []).map((item, index) => ({
+    id: `${city.id}-mine-uploaded-${index + 1}`,
+    cityId: city.id,
+    title: item.title,
+    area: item.area,
+    note: item.note,
+    image: item.image,
+    tint: city.accent,
+    aura: city.aura,
+    collected: true,
+    dateLabel: `${formatEchoFullDate(city.visitedAt)} / Jordan archive`,
+  }));
+
+  const generatedItems = mineTemplates.map((template, index) => ({
     id: `${city.id}-mine-${template.slug}`,
     cityId: city.id,
     title: template.title,
@@ -416,10 +432,49 @@ const mineEchoes: EchoCollectionItem[] = allEchoCities.flatMap((city, cityIndex)
     collected: index < visibleCount,
     dateLabel: `${formatEchoFullDate(city.visitedAt)} / saved ${Math.max(1, cityIndex + index)}d apart`,
   }));
+
+  if (uploadedItems.length > 0) {
+    return uploadedItems;
+  }
+
+  if (webFallbackEchoes) {
+    return webFallbackEchoes.map((item, index) => ({
+      id: `${city.id}-mine-fallback-${index + 1}`,
+      cityId: city.id,
+      title: item.title,
+      area: item.area,
+      note: item.note,
+      image: item.image,
+      tint: city.accent,
+      aura: city.aura,
+      collected: true,
+      dateLabel: `${formatEchoFullDate(city.visitedAt)} / city fallback`,
+    }));
+  }
+
+  return generatedItems;
 });
 
-const othersEchoes: EchoCollectionItem[] = allEchoCities.flatMap((city, cityIndex) =>
-  othersTemplates.map((template, index) => ({
+const othersEchoes: EchoCollectionItem[] = allEchoCities.flatMap((city, cityIndex) => {
+  const uploadedOtherEchoes = uploadedOtherEchoesByCity[city.id as keyof typeof uploadedOtherEchoesByCity] ?? [];
+  const webFallbackEchoes = webFallbackEchoesByCity[city.id as keyof typeof webFallbackEchoesByCity];
+
+  const uploadedItems = uploadedOtherEchoes.map((item, index) => ({
+    id: `${city.id}-others-uploaded-${index + 1}`,
+    cityId: city.id,
+    title: item.title,
+    area: item.area,
+    note: item.note,
+    image: item.image,
+    tint: city.accent,
+    aura: city.aura,
+    collected: true,
+    dateLabel: `${formatEchoFullDate(city.visitedAt)} / ${item.activityLabel}`,
+    popularityCount: 1000 - cityIndex * 10 - index * 7,
+    activityLabel: item.activityLabel,
+  }));
+
+  const generatedItems = othersTemplates.map((template, index) => ({
     id: `${city.id}-others-${template.slug}`,
     cityId: city.id,
     title: template.title,
@@ -432,8 +487,31 @@ const othersEchoes: EchoCollectionItem[] = allEchoCities.flatMap((city, cityInde
     dateLabel: `${formatEchoFullDate(city.visitedAt)} / ${template.activityLabel}`,
     popularityCount: template.popularityBase - cityIndex * 8 - index * 11,
     activityLabel: template.activityLabel,
-  })),
-);
+  }));
+
+  if (uploadedItems.length > 0) {
+    return uploadedItems;
+  }
+
+  if (webFallbackEchoes) {
+    return webFallbackEchoes.map((item, index) => ({
+      id: `${city.id}-others-fallback-${index + 1}`,
+      cityId: city.id,
+      title: item.title,
+      area: item.area,
+      note: item.note,
+      image: item.image,
+      tint: city.accent,
+      aura: city.aura,
+      collected: true,
+      dateLabel: `${formatEchoFullDate(city.visitedAt)} / city fallback`,
+      popularityCount: 900 - cityIndex * 10 - index * 7,
+      activityLabel: 'city fallback',
+    }));
+  }
+
+  return generatedItems;
+});
 
 const galleryItems: EchoGalleryItem[] = allEchoCities.flatMap((city) => {
   const cityMine = mineEchoes.filter((item) => item.cityId === city.id);

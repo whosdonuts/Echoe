@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Heart, MessageCircle, Send, Music2, ChevronLeft, Mail } from 'lucide-react';
 import { SlidingPill } from '@/components/ui/SlidingPill';
+import { uploadedExploreFeed, uploadedFriendsFeed, type UploadedExplorePost } from '@/lib/data/uploadedCityAssets';
 import { colors } from '@/lib/theme/colors';
 
 type ExploreFeedMode = 'friends' | 'explore';
@@ -10,106 +11,16 @@ type ExploreViewMode = 'feed' | 'inbox';
 
 const EXPLORE_VIEW_MODE_EVENT = 'echo:explore-view-mode';
 
-type ExplorePost = {
-  id: string;
-  author: string;
-  handle: string;
-  avatar: string;
-  image: string;
-  city: string;
-  location: string;
-  music: string;
-  accent: string;
-};
+type ExplorePost = UploadedExplorePost;
 
-const friendsFeed: ExplorePost[] = [
-  {
-    id: 'friend-harbor',
-    author: 'Lina',
-    handle: '@linaside',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=320&q=80',
-    image: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=80',
-    city: 'Toronto',
-    location: 'Old Port ferry wall',
-    music: 'Soft ferry cables',
-    accent: '#87A3C9',
-  },
-  {
-    id: 'friend-cafe',
-    author: 'Mara',
-    handle: '@maraleone',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=320&q=80',
-    image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80',
-    city: 'Toronto',
-    location: 'Prince Street Cafe',
-    music: 'Espresso hiss loop',
-    accent: '#9AAFD6',
-  },
-  {
-    id: 'friend-station',
-    author: 'Noah',
-    handle: '@noahnorth',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=320&q=80',
-    image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80',
-    city: 'Toronto',
-    location: 'Union platform 5',
-    music: 'Rain over brakes',
-    accent: '#7B95BC',
-  },
-];
-
-const exploreFeed: ExplorePost[] = [
-  {
-    id: 'explore-quay',
-    author: 'Collected nearby',
-    handle: '@echo.explore',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=320&q=80',
-    image: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80',
-    city: 'Toronto',
-    location: 'Queens Quay',
-    music: 'Blue hour ferry horn',
-    accent: '#6482AD',
-  },
-  {
-    id: 'explore-arcade',
-    author: 'City trace',
-    handle: '@echo.explore',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=320&q=80',
-    image: 'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&w=1200&q=80',
-    city: 'Toronto',
-    location: 'St. Lawrence Arcade',
-    music: 'Market after-rain',
-    accent: '#8EA8CB',
-  },
-  {
-    id: 'explore-bridge',
-    author: 'City trace',
-    handle: '@echo.explore',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=320&q=80',
-    image: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=1200&q=80',
-    city: 'Toronto',
-    location: 'Bathurst footbridge',
-    music: 'Night wind loop',
-    accent: '#A1B4D9',
-  },
-  {
-    id: 'explore-underpass',
-    author: 'Collected nearby',
-    handle: '@echo.explore',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=320&q=80',
-    image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1200&q=80',
-    city: 'Toronto',
-    location: 'Lower Simcoe underpass',
-    music: 'Wet tire reverb',
-    accent: '#5D7AA3',
-  },
-];
+const friendsFeed: ExplorePost[] = uploadedFriendsFeed;
+const exploreFeed: ExplorePost[] = uploadedExploreFeed;
 
 const inboxItems = [
   {
     id: 'inbox-1',
-    username: '@linaside',
-    name: 'Lina',
+    username: '@xavier',
+    name: 'Xavier',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=320&q=80',
     preview: 'Echo sent',
     time: 'Now',
@@ -117,8 +28,8 @@ const inboxItems = [
   },
   {
     id: 'inbox-2',
-    username: '@maraleone',
-    name: 'Mara',
+    username: '@alex',
+    name: 'Alex',
     avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=320&q=80',
     preview: 'Echo sent',
     time: '18m',
@@ -126,8 +37,8 @@ const inboxItems = [
   },
   {
     id: 'inbox-3',
-    username: '@noahnorth',
-    name: 'Noah',
+    username: '@ben',
+    name: 'Ben',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=320&q=80',
     preview: 'Shared Echo with you',
     time: '1h',
@@ -135,8 +46,8 @@ const inboxItems = [
   },
   {
     id: 'inbox-4',
-    username: '@julesafter6',
-    name: 'Jules',
+    username: '@daniel',
+    name: 'Daniel',
     avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=320&q=80',
     preview: 'if this trace makes me cry on the streetcar, I am billing you',
     time: '3h',

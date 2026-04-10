@@ -49,11 +49,17 @@ body {
 }
 
 /* App shell — centred 480px mobile container */
+.app-stage {
+  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
 .app-shell {
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  max-width: 480px;
+  width: 100%;
   margin: 0 auto;
   position: relative;
   background-color: var(--background);
@@ -97,6 +103,58 @@ body {
   overflow: hidden;
   position: relative;
   z-index: 1;
+}
+
+@media (min-width: 700px) {
+  body {
+    background:
+      radial-gradient(88% 62% at 50% 12%, rgba(92, 104, 124, 0.16) 0%, rgba(92, 104, 124, 0) 58%),
+      radial-gradient(72% 56% at 50% 100%, rgba(18, 24, 35, 0.28) 0%, rgba(18, 24, 35, 0) 70%),
+      linear-gradient(180deg, #0f141d 0%, #171f2b 100%);
+  }
+
+  .app-stage {
+    min-height: 100dvh;
+    height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 24px;
+    background:
+      radial-gradient(50% 30% at 50% 8%, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%),
+      linear-gradient(180deg, rgba(7, 10, 16, 0.18), rgba(7, 10, 16, 0));
+  }
+
+  .app-shell {
+    aspect-ratio: 390 / 844;
+    width: min(390px, calc(100dvh * 390 / 844));
+    max-width: min(390px, calc(100dvh * 390 / 844));
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    border-radius: 38px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 36px 80px rgba(0, 0, 0, 0.42),
+      0 12px 28px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  }
+}
+
+@media (max-width: 699px) {
+  .app-stage {
+    min-height: 100dvh;
+    height: 100dvh;
+  }
+
+  .app-shell {
+    max-width: none;
+    min-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
 }
 
 /* Scrollbar hiding utility */

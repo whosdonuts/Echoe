@@ -114,7 +114,7 @@ export const atlasFragments: AtlasFragment[] = [
       'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=80',
     tint: '#E8B9AB',
     shape: 'orb',
-    friend: 'Lina',
+    friend: 'Alex',
   },
   {
     id: 'atlas-prince',
@@ -151,7 +151,7 @@ export const atlasFragments: AtlasFragment[] = [
       'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&w=1200&q=80',
     tint: '#C6B58E',
     shape: 'capsule',
-    friend: 'Mara',
+    friend: 'Xavier',
   },
   {
     id: 'atlas-footbridge',
@@ -176,7 +176,7 @@ export const atlasFragments: AtlasFragment[] = [
       'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80',
     tint: '#A4B7D8',
     shape: 'capsule',
-    friend: 'Noah',
+    friend: 'Ben',
   },
 ];
 
@@ -280,14 +280,14 @@ export const createMemoryDraft: CreateMemoryDraft = {
 };
 
 export const profile = {
-  name: 'Mara Leone',
-  username: '@maraleone',
+  name: 'Jordan',
+  username: '@jordan',
   joined: 'Joined January 2024',
   bio: 'Mostly stations, weather, and half-finished goodbyes.',
   status: 'Leaving small weather reports for people who arrive after me.',
   accountNote: 'Prototype account / Toronto memories / notifications softened overnight',
   avatar:
-    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=80',
+    '/profile/jordan.png',
   stats: [
     { label: 'Created', value: '42' },
     { label: 'Saved', value: '19' },
