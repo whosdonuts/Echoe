@@ -1,6 +1,7 @@
 'use client';
 
 import { CSSProperties, PointerEvent, ReactNode, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { colors } from '@/lib/theme/colors';
 
 type SocialBottomSheetProps = {
@@ -52,20 +53,33 @@ export function SocialBottomSheet({
   const [snap, setSnap] = useState<SheetSnap>('partial');
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
-  const [viewportHeight, setViewportHeight] = useState(() => (typeof window === 'undefined' ? 844 : window.innerHeight));
+  const [overlayRoot, setOverlayRoot] = useState<HTMLElement | null>(() =>
+    typeof document === 'undefined' ? null : document.getElementById('app-shell-overlays'),
+  );
+  const [containerHeight, setContainerHeight] = useState(() => (typeof window === 'undefined' ? 844 : window.innerHeight));
 
   useEffect(() => {
-    const handleResize = () => {
-      setViewportHeight(window.innerHeight);
+    setOverlayRoot(document.getElementById('app-shell-overlays'));
+  }, []);
+
+  useEffect(() => {
+    if (!overlayRoot) return;
+
+    const syncHeight = () => {
+      setContainerHeight(overlayRoot.clientHeight || window.innerHeight);
     };
 
-    handleResize();
-    window.addEventListener('resize', handleResize);
+    syncHeight();
+
+    const observer = new ResizeObserver(syncHeight);
+    observer.observe(overlayRoot);
+    window.addEventListener('resize', syncHeight);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      observer.disconnect();
+      window.removeEventListener('resize', syncHeight);
     };
-  }, []);
+  }, [overlayRoot]);
 
   const setTrackedDragOffset = (nextOffset: number) => {
     dragOffsetRef.current = nextOffset;
@@ -120,9 +134,9 @@ export function SocialBottomSheet({
     };
   }, []);
 
-  if (!isMounted) return null;
+  if (!isMounted || !overlayRoot) return null;
 
-  const sheetHeight = Math.max(320, Math.min(viewportHeight - SHEET_TOP_GAP, SHEET_MAX_HEIGHT));
+  const sheetHeight = Math.max(320, Math.min(containerHeight - SHEET_TOP_GAP, SHEET_MAX_HEIGHT));
   const partialOffset = expandedOnly ? 0 : Math.round(sheetHeight * (1 - PARTIAL_REVEAL_RATIO));
   const closedOffset = sheetHeight + 40;
   const settledOffset = expandedOnly ? 0 : snap === 'expanded' ? 0 : partialOffset;
@@ -191,10 +205,10 @@ export function SocialBottomSheet({
     setTrackedDragOffset(nextOffset);
   };
 
-  return (
+  const sheet = (
     <div
       style={{
-        position: 'fixed',
+        position: 'absolute',
         inset: 0,
         zIndex,
         display: 'flex',
@@ -205,6 +219,7 @@ export function SocialBottomSheet({
         transition: `opacity ${SOCIAL_BOTTOM_SHEET_ENTER_EXIT_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
         backdropFilter: `blur(${isOpen ? 18 : 0}px)`,
         WebkitBackdropFilter: `blur(${isOpen ? 18 : 0}px)`,
+        pointerEvents: 'auto',
       }}
       onClick={onClose}
     >
@@ -265,4 +280,6 @@ export function SocialBottomSheet({
       </div>
     </div>
   );
+
+  return createPortal(sheet, overlayRoot);
 }

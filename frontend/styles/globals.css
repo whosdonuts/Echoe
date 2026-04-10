@@ -105,6 +105,15 @@ body {
   z-index: 1;
 }
 
+.app-shell-overlays {
+  position: absolute;
+  inset: 0;
+  z-index: 140;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
 @media (min-width: 700px) {
   body {
     background:
@@ -433,7 +442,7 @@ a {
 .travel-overlay__label { font-size: 13px; font-weight: 600; }
 
 .aceb-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 70;
   background: rgba(12, 10, 30, 0.45);
@@ -448,8 +457,8 @@ a {
 }
 
 .aceb-panel {
-  width: min(460px, calc(100vw - 24px));
-  max-height: 88vh;
+  width: min(460px, calc(100% - 24px));
+  max-height: min(88%, calc(100% - 24px));
   overflow: auto;
   padding: 24px 22px 28px;
   border-radius: 20px 20px 0 0;
