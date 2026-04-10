@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
 import { Heart, MessageCircle, Send, Music2, ChevronLeft, Mail } from 'lucide-react';
 import { SlidingPill } from '@/components/ui/SlidingPill';
 import { uploadedExploreFeed, uploadedFriendsFeed, type UploadedExplorePost } from '@/lib/data/uploadedCityAssets';
@@ -141,11 +142,30 @@ function FeedActions({ accent, liked, onToggleLike }: { accent: string; liked: b
   );
 }
 
-function ExploreFeedCard({ post, height, liked, onToggleLike }: { post: ExplorePost; height: number; liked: boolean; onToggleLike: () => void }) {
+function ExploreFeedCard({
+  post,
+  height,
+  liked,
+  onToggleLike,
+  prioritized,
+}: {
+  post: ExplorePost;
+  height: number;
+  liked: boolean;
+  onToggleLike: () => void;
+  prioritized: boolean;
+}) {
   return (
     <div style={{ width: '100%', height, backgroundColor: '#120D0A', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
-      {/* Background image */}
-      <img src={post.image} alt={post.city} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+      <Image
+        alt={post.city}
+        fill
+        loading={prioritized ? 'eager' : 'lazy'}
+        priority={prioritized}
+        sizes="(max-width: 699px) 100vw, 390px"
+        src={post.image}
+        style={{ objectFit: 'cover' }}
+      />
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(19, 13, 10, 0.20), rgba(19, 13, 10, 0.02) 42%, rgba(19, 13, 10, 0.34))' }} />
       {/* Overlay */}
       <div style={{ position: 'absolute', inset: 0 }}>
@@ -180,7 +200,15 @@ function InboxPlaceholder({ onBack }: { onBack: () => void }) {
             key={item.id}
             style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 14, paddingTop: 14, paddingBottom: 14, borderBottom: `1px solid ${colors.shellBorderSoft}`, width: '100%', minWidth: 0, background: 'none', border: 'none', borderBottomColor: colors.shellBorderSoft, borderBottomWidth: 1, borderBottomStyle: 'solid', cursor: 'pointer' }}
           >
-            <img src={item.avatar} alt={item.name} style={{ width: 54, height: 54, borderRadius: 27, objectFit: 'cover', flexShrink: 0 }} />
+            <Image
+              alt={item.name}
+              height={54}
+              loading="lazy"
+              sizes="54px"
+              src={item.avatar}
+              style={{ width: 54, height: 54, borderRadius: 27, objectFit: 'cover', flexShrink: 0 }}
+              width={54}
+            />
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3, textAlign: 'left' }}>
               <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
                 <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: colors.echoInk, fontSize: 15, fontWeight: item.unread ? 700 : 600 }}>{item.name}</span>
@@ -235,9 +263,15 @@ export function ExploreScreen() {
         style={{ width: '100%', height: '100%', overflowY: 'scroll', scrollSnapType: 'y mandatory' }}
         className="scrollbar-hide"
       >
-        {feedData.map((post) => (
+        {feedData.map((post, index) => (
           <div key={post.id} style={{ scrollSnapAlign: 'start', height: postHeight }}>
-            <ExploreFeedCard height={postHeight} liked={Boolean(likedPostIds[post.id])} onToggleLike={() => toggleLike(post.id)} post={post} />
+            <ExploreFeedCard
+              height={postHeight}
+              liked={Boolean(likedPostIds[post.id])}
+              onToggleLike={() => toggleLike(post.id)}
+              post={post}
+              prioritized={index === 0}
+            />
           </div>
         ))}
       </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { BottomTabBar, type TabKey } from '@/components/BottomTabBar';
 
@@ -25,6 +26,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const activeTab = TAB_ROUTES[pathname] ?? 'map';
   const routeTone = activeTab === 'echo' ? 'echo' : 'shell';
+
+  useEffect(() => {
+    Object.values(ROUTE_FOR_TAB).forEach((route) => {
+      if (route !== pathname) {
+        router.prefetch(route);
+      }
+    });
+  }, [pathname, router]);
 
   function handleTabPress(tab: TabKey) {
     router.push(ROUTE_FOR_TAB[tab]);

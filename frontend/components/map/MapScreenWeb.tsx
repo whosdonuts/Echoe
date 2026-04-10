@@ -79,10 +79,14 @@ const barcelonaCoreLayer: LayerProps = {
 };
 
 export function MapScreenWeb() {
+  const rootRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapRef>(null);
   const rafRef = useRef<number>(0);
+  const resizeRafRef = useRef<number>(0);
   const walkStartRef = useRef<number>(0);
   const timeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const mountedRef = useRef(false);
+  const mapReadyRef = useRef(false);
   const [mapStyle, setMapStyle] = useState(PRIMARY_DISCOVER_MAP_STYLE);
   const [mapStyleFailedOver, setMapStyleFailedOver] = useState(false);
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
@@ -107,33 +111,104 @@ export function MapScreenWeb() {
   const westernRegular = useMemo(() => westernFragments.filter((f) => !isPremiumTag(f.tag)), []);
   const westernPremium = useMemo(() => westernFragments.filter((f) => isPremiumTag(f.tag)), []);
 
-  const ensureDiscover3D = useCallback((map: MapboxMap | undefined | null) => {
-    if (!map || !map.isStyleLoaded()) return;
+  const resizeMap = useCallback(() => {
+    if (!mountedRef.current) return;
 
-    const style = map.getStyle();
-    if (style?.terrain || map.getTerrain()) return;
-    if (!map.getSource(DISCOVER_TERRAIN_SOURCE_ID)) {
-      map.addSource(DISCOVER_TERRAIN_SOURCE_ID, DISCOVER_TERRAIN_SOURCE);
+    const map = mapRef.current?.getMap();
+    const root = rootRef.current;
+
+    if (!map || !root) return;
+    if (root.clientWidth === 0 || root.clientHeight === 0) return;
+    mapReadyRef.current = true;
+
+    try {
+      map.resize();
+    } catch (error) {
+      console.error('Discover map resize failed.', error);
     }
-    map.setTerrain({ source: DISCOVER_TERRAIN_SOURCE_ID, exaggeration: 1.15 });
+  }, []);
+
+  const scheduleMapResize = useCallback(() => {
+    if (!mountedRef.current) return;
+
+    cancelAnimationFrame(resizeRafRef.current);
+    resizeRafRef.current = requestAnimationFrame(() => {
+      resizeRafRef.current = requestAnimationFrame(() => {
+        resizeMap();
+      });
+    });
+  }, [resizeMap]);
+
+  const ensureDiscover3D = useCallback((map: MapboxMap | undefined | null) => {
+    if (!mountedRef.current || !map || !map.isStyleLoaded()) return;
+
+    try {
+      const style = map.getStyle();
+      if (style?.terrain || map.getTerrain()) return;
+      if (!map.getSource(DISCOVER_TERRAIN_SOURCE_ID)) {
+        map.addSource(DISCOVER_TERRAIN_SOURCE_ID, DISCOVER_TERRAIN_SOURCE);
+      }
+      map.setTerrain({ source: DISCOVER_TERRAIN_SOURCE_ID, exaggeration: 1.15 });
+    } catch (error) {
+      console.error('Discover map terrain initialization failed.', error);
+    }
   }, []);
 
   const clearScheduledEffects = useCallback(() => {
     timeoutRefs.current.forEach((h) => clearTimeout(h));
     timeoutRefs.current = [];
     cancelAnimationFrame(rafRef.current);
+    cancelAnimationFrame(resizeRafRef.current);
   }, []);
 
-  useEffect(() => clearScheduledEffects, [clearScheduledEffects]);
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+      mapReadyRef.current = false;
+      clearScheduledEffects();
+    };
+  }, [clearScheduledEffects]);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    scheduleMapResize();
+
+    const handleWindowResize = () => {
+      scheduleMapResize();
+    };
+
+    window.addEventListener('resize', handleWindowResize);
+
+    const observer = typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(() => {
+          scheduleMapResize();
+        });
+
+    observer?.observe(root);
+
+    return () => {
+      window.removeEventListener('resize', handleWindowResize);
+      observer?.disconnect();
+    };
+  }, [scheduleMapResize]);
 
   const scheduleTimeout = useCallback((cb: () => void, delay: number) => {
-    const h = setTimeout(cb, delay);
+    const h = setTimeout(() => {
+      if (!mountedRef.current) return;
+      cb();
+    }, delay);
     timeoutRefs.current.push(h);
   }, []);
 
   const fragmentKey = useCallback((fragment: WesternFragment, prefix = '') => `${prefix}${fragment.lng},${fragment.lat}`, []);
 
   const focusPopup = useCallback((fragment: WesternFragment, key: string) => {
+    if (!mountedRef.current) return;
     setPopupInfo({ lng: fragment.lng, lat: fragment.lat, title: fragment.title, subtitle: fragment.subtitle, tag: fragment.tag });
     setSelectedMarkerKey(key);
     setRippleKey(null);
@@ -158,6 +233,7 @@ export function MapScreenWeb() {
 
   const handleMapClick = useCallback(
     (event: MapMouseEvent) => {
+      if (!mountedRef.current) return;
       if (traveling) return;
       const feature = event.features?.[0];
       if (!feature || feature.geometry.type !== 'Point') { setPopupInfo(null); setSelectedMarkerKey(null); return; }
@@ -173,6 +249,7 @@ export function MapScreenWeb() {
   );
 
   const handleMapError = useCallback((event: ErrorEvent) => {
+    if (!mountedRef.current) return;
     if (mapStyleFailedOver || mapStyle !== PRIMARY_DISCOVER_MAP_STYLE) return;
     console.error('Discover map primary style failed to load, falling back to dark-v11.', {
       style: PRIMARY_DISCOVER_MAP_STYLE,
@@ -183,12 +260,17 @@ export function MapScreenWeb() {
   }, [mapStyle, mapStyleFailedOver]);
 
   const handleMapLoad = useCallback(() => {
+    if (!mountedRef.current) return;
+    mapReadyRef.current = true;
     ensureDiscover3D(mapRef.current?.getMap());
-  }, [ensureDiscover3D]);
+    scheduleMapResize();
+  }, [ensureDiscover3D, scheduleMapResize]);
 
   const handleMapStyleData = useCallback((_event: MapStyleDataEvent) => {
+    if (!mountedRef.current) return;
     ensureDiscover3D(mapRef.current?.getMap());
-  }, [ensureDiscover3D]);
+    scheduleMapResize();
+  }, [ensureDiscover3D, scheduleMapResize]);
 
   const startWalk = useCallback(() => {
     if (walking || walkDone || traveling) return;
@@ -197,6 +279,7 @@ export function MapScreenWeb() {
     setWalking(true);
     walkStartRef.current = performance.now();
     const tick = (now: number) => {
+      if (!mountedRef.current) return;
       const progress = Math.min((now - walkStartRef.current) / WALK_DURATION_MS, 1);
       const eased = easeInOutQuad(progress);
       const [lng, lat] = interpolateRoute(DEMO_WALK_PATH, eased);
@@ -253,7 +336,7 @@ export function MapScreenWeb() {
 
   if (!tokenLoaded) {
     return (
-      <div className="map-web-root">
+      <div className="map-web-root" ref={rootRef}>
         <div className="map-missing-card">
           <div className="map-missing-icon">!</div>
           <p className="map-missing-title">Mapbox token missing</p>
@@ -264,7 +347,7 @@ export function MapScreenWeb() {
   }
 
   return (
-    <div className="map-web-root">
+    <div className="map-web-root" ref={rootRef}>
       <MapHudWeb
         currentCityLabel={currentCityLabel}
         nearbyCount={nearbyCount}
@@ -286,6 +369,7 @@ export function MapScreenWeb() {
         onLoad={handleMapLoad}
         onStyleData={handleMapStyleData}
         ref={mapRef}
+        reuseMaps
         style={{ width: '100%', height: '100%' }}
       >
         {isWestern ? (
