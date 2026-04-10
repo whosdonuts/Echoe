@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Settings2, X, Edit3, Bell, Lock, HelpCircle, LogOut, ChevronRight } from 'lucide-react';
 import { SocialBottomSheet } from '@/components/social/SocialBottomSheet';
 import { profile } from '@/lib/data/mock';
+import { uploadedProfileFavorites as profileFavorites } from '@/lib/data/uploadedCityAssets';
 import { colors } from '@/lib/theme/colors';
 import { shellMetrics } from '@/lib/theme/layout';
 
@@ -20,31 +21,6 @@ function getSettingIcon(iconName: string, danger: boolean) {
 
   return icons[iconName] ?? <span style={{ fontSize: 14 }}>*</span>;
 }
-
-const profileFavorites = [
-  {
-    id: 'favorite-night-train',
-    title: 'Night Train Loops',
-    subtitle: 'Most replayed sound',
-    meta: 'Union Station / saved 12 times',
-    image: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=1200&q=80',
-    badge: 'Most replayed',
-  },
-  {
-    id: 'favorite-blue-hour',
-    title: 'Blue Hour Ferry Horn',
-    subtitle: 'Saved for late walks',
-    meta: 'Queens Quay',
-    image: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    id: 'favorite-rain-note',
-    title: 'Rain on Platform 5',
-    subtitle: 'Favorite memento',
-    meta: 'Soft station reverb',
-    image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80',
-  },
-] as const;
 
 export function ProfileScreen() {
   const [settingsVisible, setSettingsVisible] = useState(false);

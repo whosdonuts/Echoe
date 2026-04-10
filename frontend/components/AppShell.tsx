@@ -31,11 +31,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="app-shell" data-route-tone={routeTone}>
-      <div className="app-content">
-        {children}
+    <div className="app-stage">
+      <div className="app-shell" data-route-tone={routeTone}>
+        <div className="app-content">
+          {children}
+        </div>
+        <BottomTabBar activeTab={activeTab} onTabPress={handleTabPress} />
       </div>
-      <BottomTabBar activeTab={activeTab} onTabPress={handleTabPress} />
     </div>
   );
 }
