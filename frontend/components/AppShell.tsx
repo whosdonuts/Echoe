@@ -37,6 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
         <BottomTabBar activeTab={activeTab} onTabPress={handleTabPress} />
+        <div aria-hidden className="app-shell-overlays" id="app-shell-overlays" />
       </div>
     </div>
   );
