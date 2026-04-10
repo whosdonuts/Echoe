@@ -10,6 +10,7 @@ import Map, {
   type MapMouseEvent,
   type MapRef,
 } from 'react-map-gl/mapbox';
+import type { ErrorEvent, Map as MapboxMap, MapStyleDataEvent, RasterDEMSourceSpecification } from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { BARCELONA_CENTER, BARCELONA_HEROES } from '@/lib/features/map/barcelona';
 import { barcelonaCount, barcelonaGeoJSON, londonCount, londonGeoJSON, westernCount, westernFragments } from '@/lib/features/map/runtimeData';
@@ -20,43 +21,60 @@ import { AcebFlowWeb } from './AcebFlowWeb';
 import { MapHudWeb } from './MapHudWeb';
 
 const TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '';
+const PRIMARY_DISCOVER_MAP_STYLE = 'mapbox://styles/jordanrob/cmnt7r3c5000q01rw1rc28t62';
+const FALLBACK_DISCOVER_MAP_STYLE = 'mapbox://styles/mapbox/dark-v11';
 const BCN_ARRIVAL_ZOOM = 13.2;
-const BCN_DETAIL_ZOOM = 13.8;
-const INITIAL_WESTERN_ZOOM = 14.6;
+const BCN_DETAIL_ZOOM = 14.25;
+const INITIAL_WESTERN_ZOOM = 15.15;
+const DEFAULT_CITY_PITCH = 60;
+const DEFAULT_CITY_BEARING = -24;
+const DISCOVER_TERRAIN_SOURCE_ID = 'discover-dem';
+const DISCOVER_TERRAIN_SOURCE: RasterDEMSourceSpecification = {
+  type: 'raster-dem',
+  url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+  tileSize: 512,
+  maxzoom: 14,
+};
 
 const londonGlowLayer: LayerProps = {
   id: 'london-glow', type: 'circle', source: 'london', maxzoom: 14,
   paint: {
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 3.2, 12, 4.9, 14, 6.8],
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.1, 12, 3.2, 14, 4.45],
     'circle-color': ['match', ['get', 'tag'], 'Featured', 'rgba(191,145,74,0.14)', 'Rare', 'rgba(113,90,173,0.13)', 'Social', 'rgba(91,128,177,0.13)', 'Archive', 'rgba(128,104,164,0.13)', 'Unlocked', 'rgba(194,154,66,0.16)', 'Legendary', 'rgba(205,161,82,0.16)', 'rgba(122,132,146,0.10)'],
-    'circle-blur': 0.45,
+    'circle-blur': 0.8,
+    'circle-opacity': 0.78,
   },
 };
 
 const londonCoreLayer: LayerProps = {
   id: 'london-core', type: 'circle', source: 'london', maxzoom: 14,
   paint: {
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.1, 12, 3, 14, 4.1],
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 1.5, 12, 2.16, 14, 2.98],
     'circle-color': ['match', ['get', 'tag'], 'Featured', '#B9893A', 'Rare', '#6F5CB3', 'Social', '#5B80B1', 'Archive', '#7F68A4', 'Unlocked', '#C29A42', 'Legendary', '#D1A152', '#7A8492'],
-    'circle-stroke-width': 1.15, 'circle-stroke-color': 'rgba(255,255,255,0.84)', 'circle-opacity': 0.86,
+    'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 10, 0.34, 12, 0.42, 14, 0.52],
+    'circle-stroke-color': 'rgba(255,255,255,0.82)',
+    'circle-opacity': 0.97,
   },
 };
 
 const barcelonaGlowLayer: LayerProps = {
   id: 'bcn-glow', type: 'circle', source: 'barcelona',
   paint: {
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.8, 13, 4.6, 15, 6.2, 17, 8.1],
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 1.95, 13, 3.05, 15, 4.35, 17, 5.6],
     'circle-color': ['match', ['get', 'tag'], 'Featured', 'rgba(191,145,74,0.15)', 'Rare', 'rgba(113,90,173,0.13)', 'Social', 'rgba(91,128,177,0.13)', 'Archive', 'rgba(128,104,164,0.13)', 'Unlocked', 'rgba(194,154,66,0.17)', 'Legendary', 'rgba(205,161,82,0.17)', 'rgba(122,132,146,0.10)'],
-    'circle-blur': 0.42,
+    'circle-blur': 0.82,
+    'circle-opacity': 0.8,
   },
 };
 
 const barcelonaCoreLayer: LayerProps = {
   id: 'bcn-core', type: 'circle', source: 'barcelona',
   paint: {
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.1, 13, 3.2, 15, 4.4, 17, 5.7],
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 1.48, 13, 2.18, 15, 2.96, 17, 3.72],
     'circle-color': ['match', ['get', 'tag'], 'Featured', '#B9893A', 'Rare', '#6F5CB3', 'Social', '#5B80B1', 'Archive', '#7F68A4', 'Unlocked', '#C29A42', 'Legendary', '#D1A152', '#7A8492'],
-    'circle-stroke-width': 1.2, 'circle-stroke-color': 'rgba(255,255,255,0.86)', 'circle-opacity': 0.88,
+    'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 10, 0.34, 13, 0.44, 15, 0.52, 17, 0.6],
+    'circle-stroke-color': 'rgba(255,255,255,0.82)',
+    'circle-opacity': 0.97,
   },
 };
 
@@ -65,6 +83,8 @@ export function MapScreenWeb() {
   const rafRef = useRef<number>(0);
   const walkStartRef = useRef<number>(0);
   const timeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [mapStyle, setMapStyle] = useState(PRIMARY_DISCOVER_MAP_STYLE);
+  const [mapStyleFailedOver, setMapStyleFailedOver] = useState(false);
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
   const [rippleKey, setRippleKey] = useState<string | null>(null);
   const [selectedMarkerKey, setSelectedMarkerKey] = useState<string | null>(null);
@@ -86,6 +106,17 @@ export function MapScreenWeb() {
   const nearbyCount = isWestern ? westernCount + londonCount : barcelonaCount;
   const westernRegular = useMemo(() => westernFragments.filter((f) => !isPremiumTag(f.tag)), []);
   const westernPremium = useMemo(() => westernFragments.filter((f) => isPremiumTag(f.tag)), []);
+
+  const ensureDiscover3D = useCallback((map: MapboxMap | undefined | null) => {
+    if (!map || !map.isStyleLoaded()) return;
+
+    const style = map.getStyle();
+    if (style?.terrain || map.getTerrain()) return;
+    if (!map.getSource(DISCOVER_TERRAIN_SOURCE_ID)) {
+      map.addSource(DISCOVER_TERRAIN_SOURCE_ID, DISCOVER_TERRAIN_SOURCE);
+    }
+    map.setTerrain({ source: DISCOVER_TERRAIN_SOURCE_ID, exaggeration: 1.15 });
+  }, []);
 
   const clearScheduledEffects = useCallback(() => {
     timeoutRefs.current.forEach((h) => clearTimeout(h));
@@ -141,6 +172,24 @@ export function MapScreenWeb() {
     [traveling],
   );
 
+  const handleMapError = useCallback((event: ErrorEvent) => {
+    if (mapStyleFailedOver || mapStyle !== PRIMARY_DISCOVER_MAP_STYLE) return;
+    console.error('Discover map primary style failed to load, falling back to dark-v11.', {
+      style: PRIMARY_DISCOVER_MAP_STYLE,
+      message: event.error?.message,
+    });
+    setMapStyle(FALLBACK_DISCOVER_MAP_STYLE);
+    setMapStyleFailedOver(true);
+  }, [mapStyle, mapStyleFailedOver]);
+
+  const handleMapLoad = useCallback(() => {
+    ensureDiscover3D(mapRef.current?.getMap());
+  }, [ensureDiscover3D]);
+
+  const handleMapStyleData = useCallback((_event: MapStyleDataEvent) => {
+    ensureDiscover3D(mapRef.current?.getMap());
+  }, [ensureDiscover3D]);
+
   const startWalk = useCallback(() => {
     if (walking || walkDone || traveling) return;
     setPopupInfo(null);
@@ -172,11 +221,11 @@ export function MapScreenWeb() {
       map.flyTo({ center: [BARCELONA_CENTER.lng, BARCELONA_CENTER.lat], zoom: 5, pitch: 40, bearing: -15, duration: 3200, essential: true });
       scheduleTimeout(() => {
         setTravelLabel('Arriving in Barcelona...');
-        map.flyTo({ center: [BARCELONA_CENTER.lng, BARCELONA_CENTER.lat], zoom: BCN_ARRIVAL_ZOOM, pitch: 25, bearing: 0, duration: 2800, essential: true });
+        map.flyTo({ center: [BARCELONA_CENTER.lng, BARCELONA_CENTER.lat], zoom: BCN_ARRIVAL_ZOOM, pitch: DEFAULT_CITY_PITCH, bearing: DEFAULT_CITY_BEARING, duration: 2800, essential: true });
         scheduleTimeout(() => setBcnRevealed(true), 1200);
         scheduleTimeout(() => setBcnHeroesVisible(true), 2000);
         scheduleTimeout(() => {
-          map.easeTo({ center: [BARCELONA_CENTER.lng, BARCELONA_CENTER.lat], zoom: BCN_DETAIL_ZOOM, pitch: 0, bearing: 0, duration: 1200 });
+          map.easeTo({ center: [BARCELONA_CENTER.lng, BARCELONA_CENTER.lat], zoom: BCN_DETAIL_ZOOM, pitch: DEFAULT_CITY_PITCH, bearing: DEFAULT_CITY_BEARING, duration: 1200 });
           scheduleTimeout(() => { setTraveling(false); setTravelLabel(''); }, 1300);
         }, 2800);
       }, 3200);
@@ -196,7 +245,7 @@ export function MapScreenWeb() {
       map.flyTo({ center: [WALK_START[0], WALK_START[1]], zoom: 5, pitch: 40, bearing: 15, duration: 3200, essential: true });
       scheduleTimeout(() => {
         setTravelLabel('Arriving at Western...');
-        map.flyTo({ center: [WALK_START[0], WALK_START[1]], zoom: INITIAL_WESTERN_ZOOM, pitch: 0, bearing: 0, duration: 2800, essential: true });
+        map.flyTo({ center: [WALK_START[0], WALK_START[1]], zoom: INITIAL_WESTERN_ZOOM, pitch: DEFAULT_CITY_PITCH, bearing: DEFAULT_CITY_BEARING, duration: 2800, essential: true });
         scheduleTimeout(() => { setTraveling(false); setTravelLabel(''); }, 3000);
       }, 3200);
     }, 2500);
@@ -227,12 +276,15 @@ export function MapScreenWeb() {
         attributionControl={false}
         cursor="auto"
         interactiveLayerIds={isBarcelona ? ['bcn-core'] : ['london-core']}
-        initialViewState={{ longitude: WALK_START[0], latitude: WALK_START[1], zoom: INITIAL_WESTERN_ZOOM, pitch: 0, bearing: 0 }}
-        mapStyle="mapbox://styles/mapbox/light-v11"
+        initialViewState={{ longitude: WALK_START[0], latitude: WALK_START[1], zoom: INITIAL_WESTERN_ZOOM, pitch: DEFAULT_CITY_PITCH, bearing: DEFAULT_CITY_BEARING }}
+        mapStyle={mapStyle}
         mapboxAccessToken={TOKEN}
         maxZoom={18}
         minZoom={2}
         onClick={handleMapClick}
+        onError={handleMapError}
+        onLoad={handleMapLoad}
+        onStyleData={handleMapStyleData}
         ref={mapRef}
         style={{ width: '100%', height: '100%' }}
       >
