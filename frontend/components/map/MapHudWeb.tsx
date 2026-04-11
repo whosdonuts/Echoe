@@ -11,6 +11,11 @@ type MapHudWebProps = {
   traveling: boolean;
 };
 
+const DISCOVER_TRIGGER_ICON_SIZE = 16;
+const DISCOVER_TRIGGER_GAP = 6;
+const DISCOVER_TRIGGER_PADDING_X = 12;
+const DISCOVER_PANEL_PADDING_X = 14;
+
 export function MapHudWeb({ currentCityLabel, nearbyCount, onSwitchCity, otherCityLabel, traveling }: MapHudWebProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -120,12 +125,12 @@ export function MapHudWeb({ currentCityLabel, nearbyCount, onSwitchCity, otherCi
             style={{
               position: 'relative',
               zIndex: 1,
-              display: 'grid',
-              gridTemplateColumns: '18px minmax(0, 1fr) 18px',
+              display: 'inline-flex',
               alignItems: 'center',
-              columnGap: 10,
+              justifyContent: 'center',
+              gap: DISCOVER_TRIGGER_GAP,
               width: '100%',
-              padding: '12px 18px',
+              padding: `12px ${DISCOVER_TRIGGER_PADDING_X}px`,
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
@@ -133,7 +138,6 @@ export function MapHudWeb({ currentCityLabel, nearbyCount, onSwitchCity, otherCi
               transition: 'padding 320ms cubic-bezier(0.22, 1, 0.36, 1)',
             }}
           >
-            <span aria-hidden="true" style={{ width: 18, height: 18 }} />
             <span
               className="display-title"
               style={{
@@ -149,12 +153,12 @@ export function MapHudWeb({ currentCityLabel, nearbyCount, onSwitchCity, otherCi
               Discover
             </span>
             <ChevronDown
-              size={18}
+              size={DISCOVER_TRIGGER_ICON_SIZE}
               color="rgba(32,39,51,0.62)"
               style={{
                 transform: open ? 'rotate(180deg) translateY(1px)' : 'rotate(0deg) translateY(0px)',
                 transition: 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)',
-                justifySelf: 'end',
+                flexShrink: 0,
               }}
             />
           </button>
@@ -177,7 +181,7 @@ export function MapHudWeb({ currentCityLabel, nearbyCount, onSwitchCity, otherCi
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 16,
-                padding: '8px 16px 14px',
+                padding: `8px ${DISCOVER_PANEL_PADDING_X}px 14px`,
               }}
             >
               <div

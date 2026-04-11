@@ -12,8 +12,8 @@ import Map, {
 } from 'react-map-gl/mapbox';
 import type { ErrorEvent, Map as MapboxMap, MapStyleDataEvent, RasterDEMSourceSpecification } from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { BARCELONA_CENTER, BARCELONA_HEROES } from '@/lib/features/map/barcelona';
-import { barcelonaCount, barcelonaGeoJSON, londonCount, londonGeoJSON, westernCount, westernFragments } from '@/lib/features/map/runtimeData';
+import { BARCELONA_ALL, BARCELONA_CENTER } from '@/lib/features/map/barcelona';
+import { barcelonaCount, londonCount, londonGeoJSON, westernCount, westernFragments } from '@/lib/features/map/runtimeData';
 import { getTagColor, isAcebFragment, isPremiumTag, isUnlockedTag } from '@/lib/features/map/geo';
 import type { CityMode, PopupInfo, WesternFragment } from '@/lib/features/map/types';
 import { DEMO_WALK_PATH, WALK_DURATION_MS, WALK_START, easeInOutQuad, interpolateRoute } from '@/lib/features/map/walkPath';
@@ -36,45 +36,31 @@ const DISCOVER_TERRAIN_SOURCE: RasterDEMSourceSpecification = {
   maxzoom: 14,
 };
 
+const DISCOVER_PING_GLOW_RADIUS: any = ['interpolate', ['linear'], ['zoom'], 10, 2.1, 12, 3.2, 14, 4.45, 16, 5.2];
+const DISCOVER_PING_CORE_RADIUS: any = ['interpolate', ['linear'], ['zoom'], 10, 1.5, 12, 2.16, 14, 2.98, 16, 3.5];
+const DISCOVER_PING_STROKE_WIDTH: any = ['interpolate', ['linear'], ['zoom'], 10, 0.2, 12, 0.28, 14, 0.34, 16, 0.42];
+const DISCOVER_PING_STROKE_COLOR = 'rgba(8, 10, 14, 0.96)';
+const DISCOVER_PING_COLOR_MATCH: any = ['match', ['get', 'tag'], 'Featured', '#B9893A', 'Rare', '#6F5CB3', 'Social', '#5B80B1', 'Archive', '#7F68A4', 'Unlocked', '#C29A42', 'Legendary', '#D1A152', '#7A8492'];
+const DISCOVER_PING_GLOW_COLOR_MATCH: any = ['match', ['get', 'tag'], 'Featured', 'rgba(191,145,74,0.14)', 'Rare', 'rgba(113,90,173,0.13)', 'Social', 'rgba(91,128,177,0.13)', 'Archive', 'rgba(128,104,164,0.13)', 'Unlocked', 'rgba(194,154,66,0.15)', 'Legendary', 'rgba(205,161,82,0.15)', 'rgba(122,132,146,0.10)'];
+
 const londonGlowLayer: LayerProps = {
   id: 'london-glow', type: 'circle', source: 'london', maxzoom: 14,
   paint: {
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.1, 12, 3.2, 14, 4.45],
-    'circle-color': ['match', ['get', 'tag'], 'Featured', 'rgba(191,145,74,0.14)', 'Rare', 'rgba(113,90,173,0.13)', 'Social', 'rgba(91,128,177,0.13)', 'Archive', 'rgba(128,104,164,0.13)', 'Unlocked', 'rgba(194,154,66,0.16)', 'Legendary', 'rgba(205,161,82,0.16)', 'rgba(122,132,146,0.10)'],
-    'circle-blur': 0.8,
-    'circle-opacity': 0.78,
+    'circle-radius': DISCOVER_PING_GLOW_RADIUS,
+    'circle-color': DISCOVER_PING_GLOW_COLOR_MATCH,
+    'circle-blur': 0.84,
+    'circle-opacity': 0.72,
   },
 };
 
 const londonCoreLayer: LayerProps = {
   id: 'london-core', type: 'circle', source: 'london', maxzoom: 14,
   paint: {
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 1.5, 12, 2.16, 14, 2.98],
-    'circle-color': ['match', ['get', 'tag'], 'Featured', '#B9893A', 'Rare', '#6F5CB3', 'Social', '#5B80B1', 'Archive', '#7F68A4', 'Unlocked', '#C29A42', 'Legendary', '#D1A152', '#7A8492'],
-    'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 10, 0.34, 12, 0.42, 14, 0.52],
-    'circle-stroke-color': 'rgba(255,255,255,0.82)',
-    'circle-opacity': 0.97,
-  },
-};
-
-const barcelonaGlowLayer: LayerProps = {
-  id: 'bcn-glow', type: 'circle', source: 'barcelona',
-  paint: {
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 1.95, 13, 3.05, 15, 4.35, 17, 5.6],
-    'circle-color': ['match', ['get', 'tag'], 'Featured', 'rgba(191,145,74,0.15)', 'Rare', 'rgba(113,90,173,0.13)', 'Social', 'rgba(91,128,177,0.13)', 'Archive', 'rgba(128,104,164,0.13)', 'Unlocked', 'rgba(194,154,66,0.17)', 'Legendary', 'rgba(205,161,82,0.17)', 'rgba(122,132,146,0.10)'],
-    'circle-blur': 0.82,
-    'circle-opacity': 0.8,
-  },
-};
-
-const barcelonaCoreLayer: LayerProps = {
-  id: 'bcn-core', type: 'circle', source: 'barcelona',
-  paint: {
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 1.48, 13, 2.18, 15, 2.96, 17, 3.72],
-    'circle-color': ['match', ['get', 'tag'], 'Featured', '#B9893A', 'Rare', '#6F5CB3', 'Social', '#5B80B1', 'Archive', '#7F68A4', 'Unlocked', '#C29A42', 'Legendary', '#D1A152', '#7A8492'],
-    'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 10, 0.34, 13, 0.44, 15, 0.52, 17, 0.6],
-    'circle-stroke-color': 'rgba(255,255,255,0.82)',
-    'circle-opacity': 0.97,
+    'circle-radius': DISCOVER_PING_CORE_RADIUS,
+    'circle-color': DISCOVER_PING_COLOR_MATCH,
+    'circle-stroke-width': DISCOVER_PING_STROKE_WIDTH,
+    'circle-stroke-color': DISCOVER_PING_STROKE_COLOR,
+    'circle-opacity': 0.98,
   },
 };
 
@@ -238,7 +224,7 @@ export function MapScreenWeb() {
       const feature = event.features?.[0];
       if (!feature || feature.geometry.type !== 'Point') { setPopupInfo(null); setSelectedMarkerKey(null); return; }
       const layerId = feature.layer?.id;
-      if (layerId !== 'london-core' && layerId !== 'bcn-core') { setPopupInfo(null); setSelectedMarkerKey(null); return; }
+      if (layerId !== 'london-core') { setPopupInfo(null); setSelectedMarkerKey(null); return; }
       const coords = feature.geometry.coordinates as [number, number];
       const props = feature.properties as Record<string, unknown>;
       setPopupInfo({ lng: coords[0], lat: coords[1], title: String(props.title ?? ''), subtitle: String(props.subtitle ?? ''), tag: String(props.tag ?? '') });
@@ -358,7 +344,7 @@ export function MapScreenWeb() {
       <Map
         attributionControl={false}
         cursor="auto"
-        interactiveLayerIds={isBarcelona ? ['bcn-core'] : ['london-core']}
+        interactiveLayerIds={isWestern ? ['london-core'] : undefined}
         initialViewState={{ longitude: WALK_START[0], latitude: WALK_START[1], zoom: INITIAL_WESTERN_ZOOM, pitch: DEFAULT_CITY_PITCH, bearing: DEFAULT_CITY_BEARING }}
         mapStyle={mapStyle}
         mapboxAccessToken={TOKEN}
@@ -397,15 +383,8 @@ export function MapScreenWeb() {
           </Marker>
         ) : null}
 
-        {isBarcelona && bcnRevealed ? (
-          <Source data={barcelonaGeoJSON as GeoJSON.FeatureCollection} id="barcelona" type="geojson">
-            <Layer {...barcelonaGlowLayer} />
-            <Layer {...barcelonaCoreLayer} />
-          </Source>
-        ) : null}
-
         {isBarcelona && bcnHeroesVisible && !traveling
-          ? BARCELONA_HEROES.map((fragment) => renderOrb(fragment, isPremiumTag(fragment.tag), selectedMarkerKey === fragmentKey(fragment, 'bcn-'), rippleKey === fragmentKey(fragment, 'bcn-'), () => handleFragmentClick(fragment, 'bcn-'), 'bcn-'))
+          ? BARCELONA_ALL.map((fragment) => renderOrb(fragment, isPremiumTag(fragment.tag), selectedMarkerKey === fragmentKey(fragment, 'bcn-'), rippleKey === fragmentKey(fragment, 'bcn-'), () => handleFragmentClick(fragment, 'bcn-'), 'bcn-'))
           : null}
 
         {popupInfo && !traveling ? (

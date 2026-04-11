@@ -250,8 +250,8 @@ a {
 
 .echo-orb {
   position: relative;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -259,54 +259,54 @@ a {
 }
 
 .echo-orb--premium {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
 }
 
 .echo-orb__glow {
   position: absolute;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 999px;
-  filter: blur(8px);
-  opacity: 0.18;
+  filter: blur(7px);
+  opacity: 0.14;
   transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease;
-  mix-blend-mode: multiply;
+  mix-blend-mode: screen;
 }
 
-.echo-orb__glow--premium { width: 24px; height: 24px; }
-.echo-orb__glow--unlocked { opacity: 0.22; }
-.echo-orb__glow--active { opacity: 0.26; transform: scale(1.08); }
+.echo-orb__glow--premium { width: 20px; height: 20px; }
+.echo-orb__glow--unlocked { opacity: 0.18; }
+.echo-orb__glow--active { opacity: 0.22; transform: scale(1.08); }
 
 .echo-orb__shell {
   position: absolute;
   width: 16px;
   height: 16px;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(245,248,251,0.9));
-  border: 1px solid rgba(255, 255, 255, 0.86);
-  box-shadow: 0 6px 14px rgba(34, 44, 58, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  background: rgba(9, 12, 17, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.94);
+  box-shadow: 0 4px 10px rgba(9, 13, 20, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.echo-orb__shell--premium { width: 20px; height: 20px; }
+.echo-orb__shell--premium { width: 16px; height: 16px; }
 .echo-orb__shell--active {
   transform: scale(1.04);
-  box-shadow: 0 8px 16px rgba(34, 44, 58, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.94);
+  box-shadow: 0 6px 14px rgba(9, 13, 20, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .echo-orb__core {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
   border-radius: 999px;
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.22);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.echo-orb__core--premium { width: 10px; height: 10px; }
+.echo-orb__core--premium { width: 12px; height: 12px; }
 .echo-orb__core--unlocked {
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.26), 0 0 8px rgba(194, 154, 66, 0.18);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.24), 0 0 8px rgba(194, 154, 66, 0.16);
 }
 .echo-orb__core--active { transform: scale(1.08); }
 

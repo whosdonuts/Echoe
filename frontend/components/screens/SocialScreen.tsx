@@ -173,6 +173,7 @@ export function SocialScreen() {
   const pageTitle = primaryTab === 'leaderboard' ? 'Leaderboard' : primaryTab === 'friends' ? 'Friends' : 'Trading';
   const showFriendsActions = primaryTab === 'friends';
   const showTradingActions = primaryTab === 'trading';
+  const showHeaderActions = showFriendsActions || showTradingActions;
 
   return (
     <div style={{ width: '100%', height: '100%', backgroundColor: colors.shellCanvas, display: 'flex', flexDirection: 'column' }}>
@@ -201,16 +202,17 @@ export function SocialScreen() {
           >
             <h2 className="display-title" style={{ color: colors.text, fontSize: 30, fontWeight: 900, letterSpacing: -0.6, margin: 0 }}>{pageTitle}</h2>
           </div>
-          {(showFriendsActions || showTradingActions) ? (
+          {showHeaderActions ? (
             <div
               style={{
-                width: 92,
+                width: showFriendsActions ? 92 : 44,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'flex-start',
+                justifyContent: showFriendsActions ? 'flex-start' : 'flex-end',
                 gap: 8,
                 position: 'relative',
                 zIndex: 1,
+                flexShrink: 0,
               }}
             >
               <SocialIconButton icon="mail-outline" onPress={() => setInboxVisible(true)} />

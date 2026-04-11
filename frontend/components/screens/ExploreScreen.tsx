@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { Heart, MessageCircle, Send, Music2, ChevronLeft, Mail } from 'lucide-react';
+import { Heart, MessageCircle, Send, Music2, ChevronLeft, Mail, Volume2, VolumeX } from 'lucide-react';
 import { SlidingPill } from '@/components/ui/SlidingPill';
 import { uploadedExploreFeed, uploadedFriendsFeed, type UploadedExplorePost } from '@/lib/data/uploadedCityAssets';
 import { colors } from '@/lib/theme/colors';
@@ -16,6 +16,82 @@ type ExplorePost = UploadedExplorePost;
 
 const friendsFeed: ExplorePost[] = uploadedFriendsFeed;
 const exploreFeed: ExplorePost[] = uploadedExploreFeed;
+
+const headerControlButtonStyle: React.CSSProperties = {
+  width: 44,
+  height: 44,
+  borderRadius: 22,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: 'linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.12))',
+  border: '1px solid rgba(255, 255, 255, 0.3)',
+  backdropFilter: 'blur(26px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(26px) saturate(180%)',
+  boxShadow: '0 18px 34px rgba(17, 24, 39, 0.2), inset 0 1px 0 rgba(255,255,255,0.28)',
+};
+
+function buildProgressivePreviewSrc(src: string) {
+  if (!src.startsWith('/')) return src;
+
+  return `/_next/image?url=${encodeURIComponent(src)}&w=96&q=28`;
+}
+
+function ProgressiveExploreImage({
+  alt,
+  prioritized,
+  src,
+}: {
+  alt: string;
+  prioritized: boolean;
+  src: string;
+}) {
+  const [isHighResLoaded, setIsHighResLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsHighResLoaded(false);
+  }, [src]);
+
+  return (
+    <>
+      <img
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+        loading={prioritized ? 'eager' : 'lazy'}
+        src={buildProgressivePreviewSrc(src)}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          filter: 'blur(18px) saturate(1.08)',
+          transform: 'scale(1.04)',
+          opacity: isHighResLoaded ? 0 : 1,
+          transition: 'opacity 220ms ease',
+        }}
+      />
+      <img
+        alt={alt}
+        decoding={prioritized ? 'sync' : 'async'}
+        fetchPriority={prioritized ? 'high' : 'auto'}
+        loading={prioritized ? 'eager' : 'lazy'}
+        onLoad={() => setIsHighResLoaded(true)}
+        src={src}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          opacity: isHighResLoaded ? 1 : 0,
+          transition: 'opacity 280ms ease',
+        }}
+      />
+    </>
+  );
+}
 
 const inboxItems = [
   {
@@ -95,7 +171,15 @@ function TabToggle({ activeFeed, onChange }: { activeFeed: ExploreFeedMode; onCh
   );
 }
 
-function FeedActions({ accent, liked, onToggleLike }: { accent: string; liked: boolean; onToggleLike: () => void }) {
+function FeedActions({
+  accent,
+  liked,
+  onToggleLike,
+}: {
+  accent: string;
+  liked: boolean;
+  onToggleLike: () => void;
+}) {
   const overlayIconShadow = 'drop-shadow(0 4px 14px rgba(0, 0, 0, 0.42)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.52))';
 
   return (
@@ -147,29 +231,149 @@ function ExploreFeedCard({
   height,
   liked,
   onToggleLike,
+  onBecomeActive,
+  onSoundRejected,
   prioritized,
+  soundEnabled,
 }: {
   post: ExplorePost;
   height: number;
   liked: boolean;
   onToggleLike: () => void;
+  onBecomeActive: (postId: string) => void;
+  onSoundRejected: (postId: string) => void;
   prioritized: boolean;
+  soundEnabled: boolean;
 }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isActiveMedia, setIsActiveMedia] = useState(prioritized);
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const [hasVideoError, setHasVideoError] = useState(false);
+
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined' || !cardRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const nextIsActive = entry.isIntersecting && entry.intersectionRatio >= 0.6;
+
+        setIsActiveMedia(post.media.type === 'video' ? nextIsActive : false);
+
+        if (nextIsActive) {
+          onBecomeActive(post.id);
+        }
+      },
+      {
+        threshold: [0.35, 0.6, 0.85],
+      },
+    );
+
+    observer.observe(cardRef.current);
+
+    return () => observer.disconnect();
+  }, [onBecomeActive, post.id, post.media.type]);
+
+  useEffect(() => {
+    if (post.media.type !== 'video') return;
+
+    const video = videoRef.current;
+
+    if (!video) return;
+
+    if (isActiveMedia) {
+      video.muted = !soundEnabled;
+      video.defaultMuted = !soundEnabled;
+      video.volume = soundEnabled ? 1 : 0;
+      const playback = video.play();
+      playback?.catch(() => {
+        if (!soundEnabled) return;
+
+        video.muted = true;
+        video.defaultMuted = true;
+        video.volume = 0;
+        onSoundRejected(post.id);
+        video.play()?.catch(() => undefined);
+      });
+      return;
+    }
+
+    video.muted = true;
+    video.defaultMuted = true;
+    video.volume = 0;
+    video.pause();
+  }, [isActiveMedia, onSoundRejected, post.id, post.media.type, soundEnabled]);
+
+  useEffect(() => {
+    if (post.media.type !== 'video') return;
+    setIsVideoReady(false);
+    setHasVideoError(false);
+
+    const video = videoRef.current;
+
+    if (!video) return;
+
+    video.load();
+  }, [post.id, post.media.src, post.media.type]);
+
   return (
-    <div style={{ width: '100%', height, backgroundColor: '#120D0A', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
-      <Image
-        alt={post.city}
-        fill
-        loading={prioritized ? 'eager' : 'lazy'}
-        priority={prioritized}
-        sizes="(max-width: 699px) 100vw, 390px"
-        src={post.image}
-        style={{ objectFit: 'cover' }}
-      />
+    <div ref={cardRef} style={{ width: '100%', height, backgroundColor: '#120D0A', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+      {post.media.type === 'video' ? (
+        <>
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background:
+                'radial-gradient(120% 88% at 50% -10%, rgba(255,255,255,0.14), rgba(255,255,255,0) 50%), linear-gradient(180deg, rgba(49,35,28,0.94), rgba(18,13,10,1))',
+              opacity: isVideoReady ? 0 : 1,
+              transition: 'opacity 220ms ease',
+            }}
+          />
+          <video
+            ref={videoRef}
+            aria-label={`${post.city} by ${post.handle}`}
+            autoPlay={isActiveMedia}
+            loop
+            muted={!soundEnabled || !isActiveMedia}
+            onError={() => setHasVideoError(true)}
+            onLoadedData={() => {
+              setHasVideoError(false);
+              setIsVideoReady(true);
+            }}
+            playsInline
+            poster={post.media.poster}
+            preload={prioritized ? 'auto' : 'metadata'}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: isVideoReady ? 1 : 0,
+              transition: 'opacity 240ms ease',
+            }}
+          >
+            {(post.media.sources ?? [{ src: post.media.src, type: 'video/mp4' }]).map((source) => (
+              <source key={source.src} src={source.src} type={source.type} />
+            ))}
+          </video>
+          {hasVideoError && post.image ? (
+            <ProgressiveExploreImage alt={post.city} prioritized={prioritized} src={post.image} />
+          ) : null}
+        </>
+      ) : (
+        <ProgressiveExploreImage alt={post.city} prioritized={prioritized} src={post.media.src} />
+      )}
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(19, 13, 10, 0.20), rgba(19, 13, 10, 0.02) 42%, rgba(19, 13, 10, 0.34))' }} />
       {/* Overlay */}
       <div style={{ position: 'absolute', inset: 0 }}>
-        <FeedActions accent={post.accent} liked={liked} onToggleLike={onToggleLike} />
+        <FeedActions
+          accent={post.accent}
+          liked={liked}
+          onToggleLike={onToggleLike}
+        />
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 220, background: 'linear-gradient(to bottom, rgba(8,6,5,0), rgba(8,6,5,0.14), rgba(8,6,5,0.36))' }} />
         <div style={{ position: 'absolute', left: 18, right: 96, bottom: 100, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ color: colors.echoMainWhite, fontSize: 16, fontWeight: 700 }}>{post.city}</span>
@@ -228,13 +432,21 @@ export function ExploreScreen() {
   const [activeFeed, setActiveFeed] = useState<ExploreFeedMode>('explore');
   const [viewMode, setViewMode] = useState<ExploreViewMode>('feed');
   const [likedPostIds, setLikedPostIds] = useState<Record<string, boolean>>({});
+  const [activePostId, setActivePostId] = useState<string | null>(exploreFeed[0]?.id ?? null);
+  const [soundEnabledPostId, setSoundEnabledPostId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   const feedData = useMemo(() => (activeFeed === 'friends' ? friendsFeed : exploreFeed), [activeFeed]);
+  const activePost = useMemo(
+    () => feedData.find((post) => post.id === activePostId) ?? feedData[0] ?? null,
+    [activePostId, feedData],
+  );
   const postHeight = typeof window !== 'undefined' ? Math.max(window.innerHeight, 640) : 640;
 
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = 0;
+    setActivePostId(feedData[0]?.id ?? null);
+    setSoundEnabledPostId(null);
   }, [activeFeed]);
 
   useEffect(() => {
@@ -249,6 +461,12 @@ export function ExploreScreen() {
 
   function toggleLike(postId: string) {
     setLikedPostIds((current) => ({ ...current, [postId]: !current[postId] }));
+  }
+
+  function toggleActivePostSound() {
+    if (!activePost || activePost.media.type !== 'video') return;
+
+    setSoundEnabledPostId((current) => (current === activePost.id ? null : activePost.id));
   }
 
   if (viewMode === 'inbox') {
@@ -268,22 +486,46 @@ export function ExploreScreen() {
             <ExploreFeedCard
               height={postHeight}
               liked={Boolean(likedPostIds[post.id])}
+              onBecomeActive={setActivePostId}
+              onSoundRejected={(postId) => {
+                setSoundEnabledPostId((current) => (current === postId ? null : current));
+              }}
               onToggleLike={() => toggleLike(post.id)}
               post={post}
               prioritized={index === 0}
+              soundEnabled={soundEnabledPostId === post.id}
             />
           </div>
         ))}
       </div>
       {/* Top controls overlay */}
       <div style={{ position: 'absolute', top: 8, left: 0, right: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 14, paddingRight: 14, pointerEvents: 'none' }}>
-        <div style={{ width: 44 }} />
+        {activePost?.media.type === 'video' ? (
+          <button
+            type="button"
+            aria-label={soundEnabledPostId === activePost.id ? 'Mute video audio' : 'Enable video audio'}
+            onClick={toggleActivePostSound}
+            style={{
+              ...headerControlButtonStyle,
+              cursor: 'pointer',
+              pointerEvents: 'auto',
+            }}
+          >
+            {soundEnabledPostId === activePost.id ? (
+              <Volume2 size={20} strokeWidth={2.2} color={colors.echoMainWhite} style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.38))' }} />
+            ) : (
+              <VolumeX size={20} strokeWidth={2.2} color={colors.echoMainWhite} style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.38))' }} />
+            )}
+          </button>
+        ) : (
+          <div style={{ ...headerControlButtonStyle, opacity: 0, pointerEvents: 'none' }} />
+        )}
         <div style={{ pointerEvents: 'auto' }}>
           <TabToggle activeFeed={activeFeed} onChange={setActiveFeed} />
         </div>
         <button
           onClick={() => setViewMode('inbox')}
-          style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.12))', border: '1px solid rgba(255, 255, 255, 0.3)', backdropFilter: 'blur(26px) saturate(180%)', WebkitBackdropFilter: 'blur(26px) saturate(180%)', boxShadow: '0 18px 34px rgba(17, 24, 39, 0.2), inset 0 1px 0 rgba(255,255,255,0.28)', cursor: 'pointer', pointerEvents: 'auto' }}
+          style={{ ...headerControlButtonStyle, cursor: 'pointer', pointerEvents: 'auto' }}
         >
           <Mail size={20} color={colors.echoMainWhite} />
         </button>
