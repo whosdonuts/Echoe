@@ -433,7 +433,7 @@ export function ExploreScreen() {
   const [viewMode, setViewMode] = useState<ExploreViewMode>('feed');
   const [likedPostIds, setLikedPostIds] = useState<Record<string, boolean>>({});
   const [activePostId, setActivePostId] = useState<string | null>(exploreFeed[0]?.id ?? null);
-  const [soundEnabledPostId, setSoundEnabledPostId] = useState<string | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const listRef = useRef<HTMLDivElement>(null);
 
   const feedData = useMemo(() => (activeFeed === 'friends' ? friendsFeed : exploreFeed), [activeFeed]);
@@ -446,7 +446,6 @@ export function ExploreScreen() {
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = 0;
     setActivePostId(feedData[0]?.id ?? null);
-    setSoundEnabledPostId(null);
   }, [activeFeed]);
 
   useEffect(() => {
@@ -466,7 +465,7 @@ export function ExploreScreen() {
   function toggleActivePostSound() {
     if (!activePost || activePost.media.type !== 'video') return;
 
-    setSoundEnabledPostId((current) => (current === activePost.id ? null : activePost.id));
+    setSoundEnabled((current) => !current);
   }
 
   if (viewMode === 'inbox') {
@@ -487,13 +486,13 @@ export function ExploreScreen() {
               height={postHeight}
               liked={Boolean(likedPostIds[post.id])}
               onBecomeActive={setActivePostId}
-              onSoundRejected={(postId) => {
-                setSoundEnabledPostId((current) => (current === postId ? null : current));
+              onSoundRejected={() => {
+                setSoundEnabled(false);
               }}
               onToggleLike={() => toggleLike(post.id)}
               post={post}
               prioritized={index === 0}
-              soundEnabled={soundEnabledPostId === post.id}
+              soundEnabled={soundEnabled}
             />
           </div>
         ))}
@@ -503,7 +502,7 @@ export function ExploreScreen() {
         {activePost?.media.type === 'video' ? (
           <button
             type="button"
-            aria-label={soundEnabledPostId === activePost.id ? 'Mute video audio' : 'Enable video audio'}
+            aria-label={soundEnabled ? 'Mute video audio' : 'Enable video audio'}
             onClick={toggleActivePostSound}
             style={{
               ...headerControlButtonStyle,
@@ -511,7 +510,7 @@ export function ExploreScreen() {
               pointerEvents: 'auto',
             }}
           >
-            {soundEnabledPostId === activePost.id ? (
+            {soundEnabled ? (
               <Volume2 size={20} strokeWidth={2.2} color={colors.echoMainWhite} style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.38))' }} />
             ) : (
               <VolumeX size={20} strokeWidth={2.2} color={colors.echoMainWhite} style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.38))' }} />

@@ -84,6 +84,7 @@ export function MapScreenWeb() {
   const [cityMode, setCityMode] = useState<CityMode>('western');
   const [traveling, setTraveling] = useState(false);
   const [travelLabel, setTravelLabel] = useState('');
+  const [styleReady, setStyleReady] = useState(false);
   const [bcnRevealed, setBcnRevealed] = useState(false);
   const [bcnHeroesVisible, setBcnHeroesVisible] = useState(false);
   const [acebOpen, setAcebOpen] = useState(false);
@@ -156,6 +157,10 @@ export function MapScreenWeb() {
       clearScheduledEffects();
     };
   }, [clearScheduledEffects]);
+
+  useEffect(() => {
+    setStyleReady(false);
+  }, [mapStyle]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -248,13 +253,18 @@ export function MapScreenWeb() {
   const handleMapLoad = useCallback(() => {
     if (!mountedRef.current) return;
     mapReadyRef.current = true;
-    ensureDiscover3D(mapRef.current?.getMap());
+    const map = mapRef.current?.getMap();
+    setStyleReady(Boolean(map?.isStyleLoaded()));
+    ensureDiscover3D(map);
     scheduleMapResize();
   }, [ensureDiscover3D, scheduleMapResize]);
 
   const handleMapStyleData = useCallback((_event: MapStyleDataEvent) => {
     if (!mountedRef.current) return;
-    ensureDiscover3D(mapRef.current?.getMap());
+    const map = mapRef.current?.getMap();
+    const loaded = Boolean(map?.isStyleLoaded());
+    setStyleReady((current) => (current === loaded ? current : loaded));
+    ensureDiscover3D(map);
     scheduleMapResize();
   }, [ensureDiscover3D, scheduleMapResize]);
 
@@ -344,7 +354,7 @@ export function MapScreenWeb() {
       <Map
         attributionControl={false}
         cursor="auto"
-        interactiveLayerIds={isWestern ? ['london-core'] : undefined}
+        interactiveLayerIds={isWestern && styleReady ? ['london-core'] : undefined}
         initialViewState={{ longitude: WALK_START[0], latitude: WALK_START[1], zoom: INITIAL_WESTERN_ZOOM, pitch: DEFAULT_CITY_PITCH, bearing: DEFAULT_CITY_BEARING }}
         mapStyle={mapStyle}
         mapboxAccessToken={TOKEN}
@@ -358,7 +368,7 @@ export function MapScreenWeb() {
         reuseMaps
         style={{ width: '100%', height: '100%' }}
       >
-        {isWestern ? (
+        {isWestern && styleReady ? (
           <Source data={londonGeoJSON as GeoJSON.FeatureCollection} id="london" type="geojson">
             <Layer {...londonGlowLayer} />
             <Layer {...londonCoreLayer} />

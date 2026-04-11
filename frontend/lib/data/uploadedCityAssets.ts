@@ -72,6 +72,15 @@ function authorFromHandle(handle: string) {
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
+function displayCityName(city: string) {
+  return city
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 function normalizePlacementLabel(value: string): UploadedPlacement {
   const normalized = value.trim().toLowerCase().replace(/\s+/g, '-');
 
@@ -84,7 +93,23 @@ function normalizePlacementLabel(value: string): UploadedPlacement {
 }
 
 function parseUploadedFilename(filename: string) {
-  const match = filename.match(/^(.+?)\s+(@[^\s]+)\s+\(([^)]+)\)\.[^.]+$/i);
+  const extensionMatch = filename.match(/\.([^.]+)$/);
+
+  if (!extensionMatch) {
+    throw new Error(`Unsupported uploaded filename "${filename}"`);
+  }
+
+  let basename = filename.slice(0, -extensionMatch[0].length).trim();
+  let variant = 1;
+
+  const variantMatch = basename.match(/\((\d+)\)\s*$/);
+
+  if (variantMatch?.index !== undefined) {
+    variant = Number(variantMatch[1]);
+    basename = basename.slice(0, variantMatch.index).trim();
+  }
+
+  const match = basename.match(/^(.+?)\s+(@[^\s]+)\s+\(([^)]+)\)$/i);
 
   if (!match) {
     throw new Error(`Unsupported uploaded filename "${filename}"`);
@@ -93,26 +118,29 @@ function parseUploadedFilename(filename: string) {
   const [, city, handle, placementLabel] = match;
 
   return {
-    city: city.trim(),
+    city: displayCityName(city),
     handle: handle.trim().toLowerCase(),
     placement: normalizePlacementLabel(placementLabel),
+    variant,
   };
 }
 
 function uploadedMediaPath(filename: string) {
-  const { city, handle, placement } = parseUploadedFilename(filename);
+  const { city, handle, placement, variant } = parseUploadedFilename(filename);
   const extension = filename.split('.').pop()?.toLowerCase() ?? 'mov';
+  const variantSuffix = variant > 1 ? `-${variant}` : '';
 
   return assetPath(
-    `${slugifySegment(city)}-${slugifySegment(handle.replace(/^@/, ''))}-${slugifySegment(placement)}.${extension}`,
+    `${slugifySegment(city)}-${slugifySegment(handle.replace(/^@/, ''))}-${slugifySegment(placement)}${variantSuffix}.${extension}`,
   );
 }
 
 function uploadedMp4Path(filename: string) {
-  const { city, handle, placement } = parseUploadedFilename(filename);
+  const { city, handle, placement, variant } = parseUploadedFilename(filename);
+  const variantSuffix = variant > 1 ? `-${variant}` : '';
 
   return assetPath(
-    `${slugifySegment(city)}-${slugifySegment(handle.replace(/^@/, ''))}-${slugifySegment(placement)}.mp4`,
+    `${slugifySegment(city)}-${slugifySegment(handle.replace(/^@/, ''))}-${slugifySegment(placement)}${variantSuffix}.mp4`,
   );
 }
 
@@ -418,7 +446,25 @@ const baseUploadedExploreFeed: UploadedExplorePost[] = uploadedCityAssets
     accent: asset.accent,
   }));
 
-type ExploreVideoOverride = {
+const baseUploadedFriendsFeed: UploadedExplorePost[] = uploadedCityAssets
+  .filter((asset) => asset.placement === 'friends')
+  .map((asset) => ({
+    id: asset.id,
+    author: asset.author,
+    handle: asset.handle,
+    avatar: asset.image,
+    image: asset.image,
+    media: {
+      type: 'image',
+      src: asset.image,
+    },
+    city: asset.city,
+    location: `Friends / ${asset.city}`,
+    music: 'Shared city loop',
+    accent: asset.accent,
+  }));
+
+type FeedVideoOverride = {
   accent: string;
   filename: string;
   insertAfterId?: string;
@@ -426,7 +472,7 @@ type ExploreVideoOverride = {
   replacePostId?: string;
 };
 
-const exploreVideoOverrides: ExploreVideoOverride[] = [
+const exploreVideoOverrides: FeedVideoOverride[] = [
   {
     accent: '#7CB3A1',
     filename: 'Hamilton @joseph (explore).mov',
@@ -437,13 +483,32 @@ const exploreVideoOverrides: ExploreVideoOverride[] = [
     filename: 'Toronto @mikhai (explore).MOV',
     insertAfterId: 'toronto-dylan-explore',
   },
+  {
+    accent: '#8CC6C0',
+    filename: 'Bavaro @daniel (explore).MOV',
+  },
+  {
+    accent: '#7DB8C7',
+    filename: 'bavaro @daniel (explore) (2).MOV',
+    insertAfterId: 'bavaro-daniel-explore',
+  },
 ];
 
-function createVideoExplorePost({ accent, filename, poster }: ExploreVideoOverride): UploadedExplorePost {
+const friendsVideoOverrides: FeedVideoOverride[] = [
+  {
+    accent: '#89CBBE',
+    filename: 'Bavaro @tochi (friends).MOV',
+  },
+];
+
+function createVideoFeedPost({ accent, filename, poster }: FeedVideoOverride): UploadedExplorePost {
   const parsed = parseUploadedFilename(filename);
+  const variantSuffix = parsed.variant > 1 ? `-${parsed.variant}` : '';
+  const feedLabel = parsed.placement === 'friends' ? 'Friends' : 'Explore';
+  const musicLabel = parsed.placement === 'friends' ? 'Shared city loop' : 'Collected nearby';
 
   return {
-    id: `${slugifySegment(parsed.city)}-${slugifySegment(parsed.handle.replace(/^@/, ''))}-${parsed.placement}`,
+    id: `${slugifySegment(parsed.city)}-${slugifySegment(parsed.handle.replace(/^@/, ''))}-${parsed.placement}${variantSuffix}`,
     author: authorFromHandle(parsed.handle),
     handle: parsed.handle,
     image: poster,
@@ -463,17 +528,17 @@ function createVideoExplorePost({ accent, filename, poster }: ExploreVideoOverri
       ],
     },
     city: parsed.city,
-    location: `Explore / ${parsed.city}`,
-    music: 'Collected nearby',
+    location: `${feedLabel} / ${parsed.city}`,
+    music: musicLabel,
     accent,
   };
 }
 
-function mergeExploreVideoOverrides(posts: UploadedExplorePost[]) {
+function mergeVideoOverrides(posts: UploadedExplorePost[], overrides: FeedVideoOverride[]) {
   const mergedPosts = [...posts];
 
-  for (const override of exploreVideoOverrides) {
-    const replacementPost = createVideoExplorePost(override);
+  for (const override of overrides) {
+    const replacementPost = createVideoFeedPost(override);
 
     if (override.replacePostId) {
       const replaceIndex = mergedPosts.findIndex((post) => post.id === override.replacePostId);
@@ -499,25 +564,9 @@ function mergeExploreVideoOverrides(posts: UploadedExplorePost[]) {
   return mergedPosts;
 }
 
-export const uploadedExploreFeed: UploadedExplorePost[] = mergeExploreVideoOverrides(baseUploadedExploreFeed);
+export const uploadedExploreFeed: UploadedExplorePost[] = mergeVideoOverrides(baseUploadedExploreFeed, exploreVideoOverrides);
 
-export const uploadedFriendsFeed: UploadedExplorePost[] = uploadedCityAssets
-  .filter((asset) => asset.placement === 'friends')
-  .map((asset) => ({
-    id: asset.id,
-    author: asset.author,
-    handle: asset.handle,
-    avatar: asset.image,
-    image: asset.image,
-    media: {
-      type: 'image',
-      src: asset.image,
-    },
-    city: asset.city,
-    location: `Friends / ${asset.city}`,
-    music: 'Shared city loop',
-    accent: asset.accent,
-  }));
+export const uploadedFriendsFeed: UploadedExplorePost[] = mergeVideoOverrides(baseUploadedFriendsFeed, friendsVideoOverrides);
 
 export const uploadedMineEchoesByCity = groupByCity(
   uploadedCityAssets.filter((asset) => asset.placement === 'user-echoes' && isJordanAsset(asset)),
