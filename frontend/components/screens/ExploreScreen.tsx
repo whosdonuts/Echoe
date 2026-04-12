@@ -237,7 +237,7 @@ function ExploreFeedCard({
   soundEnabled,
 }: {
   post: ExplorePost;
-  height: number;
+  height: number | string;
   liked: boolean;
   onToggleLike: () => void;
   onBecomeActive: (postId: string) => void;
@@ -441,8 +441,6 @@ export function ExploreScreen() {
     () => feedData.find((post) => post.id === activePostId) ?? feedData[0] ?? null,
     [activePostId, feedData],
   );
-  const postHeight = typeof window !== 'undefined' ? Math.max(window.innerHeight, 640) : 640;
-
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = 0;
     setActivePostId(feedData[0]?.id ?? null);
@@ -481,9 +479,9 @@ export function ExploreScreen() {
         className="scrollbar-hide"
       >
         {feedData.map((post, index) => (
-          <div key={post.id} style={{ scrollSnapAlign: 'start', height: postHeight }}>
+          <div key={post.id} style={{ scrollSnapAlign: 'start', height: '100%' }}>
             <ExploreFeedCard
-              height={postHeight}
+              height="100%"
               liked={Boolean(likedPostIds[post.id])}
               onBecomeActive={setActivePostId}
               onSoundRejected={() => {
